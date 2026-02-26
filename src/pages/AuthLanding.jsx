@@ -1,47 +1,63 @@
 import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import Login from "./Login";
 import Signup from "./Signup";
+import "./AuthLanding.css";
 
 export default function AuthLanding({ setUser }) {
-  const [view, setView] = useState("choice"); // 'choice' | 'login' | 'signup'
+  const [view, setView] = useState("landing"); // 'landing' | 'login' | 'signup'
 
   useEffect(() => {
-    document.title = "Sign in — edustream";
+    document.title = "EduWebinar — Learn from Industry Experts";
   }, []);
 
-  return (
-    <div className="auth-container">
-      <div style={{ width: 760 }}>
-        {view === "choice" ? (
-          <div className="card glass-panel-dark" style={{ padding: 40, textAlign: "center" }}>
-            <div style={{maxWidth:640,margin:'0 auto'}}>
-              <h2 style={{ margin: 0, fontSize: 28 }}>Welcome to EduStream</h2>
-              <div className="muted" style={{ marginTop: 8 }}>Join or sign in to access webinars</div>
-
-              <div className="landing-actions" style={{ marginTop: 20 }}>
-                <button className="btn primary" onClick={() => setView("login")}>Login</button>
-                <button className="btn ghost" onClick={() => setView("signup")}>Signup</button>
-              </div>
-
-              <div className="landing-empty" style={{ marginTop: 28 }}>
-                <div className="landing-placeholder single" />
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div>
-            <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
-              <button className="btn ghost" onClick={() => setView("choice")}>Back</button>
-            </div>
-
-            {view === "login" ? (
-              <Login setUser={setUser} />
-            ) : (
-              <Signup setUser={setUser} />
-            )}
-          </div>
-        )}
+  if (view === "login") {
+    return (
+      <div className="auth-container">
+        <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8, width: 760 }}>
+          <button className="btn ghost" onClick={() => setView("landing")}>Back</button>
+        </div>
+        <Login setUser={setUser} />
       </div>
+    );
+  }
+
+  if (view === "signup") {
+    return (
+      <div className="auth-container">
+        <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8, width: 760 }}>
+          <button className="btn ghost" onClick={() => setView("landing")}>Back</button>
+        </div>
+        <Signup setUser={setUser} />
+      </div>
+    );
+  }
+
+  return (
+    <div className="landing-page">
+      {/* Hero Section */}
+      <section className="landing-hero">
+        <div className="hero-wrapper">
+          <div className="hero-content">
+            <p className="hero-badge">✨ Transform Your Career Today ✨</p>
+            <h1 className="hero-title">Learn from Industry<br />Experts Through<br />Interactive Webinars</h1>
+            <p className="hero-description">
+              Join thousands of learners worldwide. Access live sessions, expert instructors, and downloadable resources to master web development, design, and technology.
+            </p>
+            <div className="hero-buttons">
+              <button className="btn-primary" onClick={() => setView("signup")}>Get Started Free</button>
+              <button className="btn-secondary">▶ Watch Demo</button>
+            </div>
+          </div>
+          <div className="hero-image-container">
+            <img
+              src="https://images.unsplash.com/photo-1552664730-d307ca884978?w=600&h=600&fit=crop"
+              alt="Online Learning and Webinars"
+              className="hero-image"
+            />
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
