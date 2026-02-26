@@ -1,0 +1,118 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+
+:root{
+  /* Clean white theme with vibrant accents */
+  --bg: #ffffff; /* page background */
+  --card: #ffffff;
+  --muted: #6b7280;
+  --accent: #06b6d4; /* bright cyan */
+  --accent-600: #0891b2;
+  --brand-secondary: #2563eb; /* bold blue */
+  --highlight: #f97316; /* warm orange */
+  --success: #10b981;
+  --danger: #ef4444;
+  --surface-shadow: 0 8px 24px rgba(16,24,40,0.06);
+  --radius: 12px;
+}
+
+*{box-sizing:border-box}
+
+html,body,#root{height:100%}
+
+body{
+  margin:0;
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+  background: var(--bg);
+  color: #0f172a;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+
+a{color:inherit;text-decoration:none}
+
+button{cursor:pointer;border:none;background:transparent}
+
+/* Layout container used by App */
+#root{max-width:1200px;margin:24px auto;padding:16px}
+
+/* Card */
+.card{background:var(--card);border-radius:var(--radius);box-shadow:var(--surface-shadow);padding:18px}
+
+/* Glass panels (dark and light variants) */
+.glass-panel{
+  border-radius:12px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(250,250,250,0.9));
+  border: 1px solid rgba(16,24,40,0.04);
+  box-shadow: 0 10px 30px rgba(16,24,40,0.06);
+}
+.glass-panel-dark{
+  border-radius:12px;
+  background: linear-gradient(180deg, rgba(245,247,250,0.9), rgba(255,255,255,0.95));
+  border:1px solid rgba(16,24,40,0.04);
+  box-shadow: 0 8px 30px rgba(16,24,40,0.06);
+  color: #0f172a;
+}
+
+/* Inputs and selects */
+input[type="text"], input[type="email"], input[type="password"], select, textarea{
+  width:100%;padding:12px 14px;border-radius:8px;border:1px solid #e6edf3;background:#fff;font-size:14px;color:var(--accent-600);
+  outline: none;transition:box-shadow .15s, border-color .15s;
+}
+input:focus, select:focus, textarea:focus{border-color:var(--accent);box-shadow:0 6px 18px rgba(37,99,235,0.12)}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;padding:10px 16px;border-radius:8px;font-weight:600}
+.btn.primary{background:linear-gradient(90deg,var(--accent),var(--brand-secondary));color:#fff}
+.btn.ghost{background:transparent;border:1px solid #e6edf3;color:var(--muted)}
+.btn:active{transform:translateY(1px)}
+
+/* Navbar adjustments */
+.navbar{background:var(--card);position:relative;z-index:30;border-bottom:1px solid rgba(16,24,40,0.04)}
+.navbar .logo{color:var(--brand-secondary)}
+.nav-links a{color:var(--muted)}
+.nav-links a:hover{color:var(--brand-secondary)}
+.nav-link{padding:6px 10px;border-radius:6px;transition:all .18s}
+.nav-link.active{background:var(--brand-secondary);color:white;font-weight:700}
+
+/* Auth styles */
+.auth-container{display:flex;align-items:center;justify-content:center;padding:40px}
+.auth-card{width:420px;background:transparent;border-radius:12px;padding:28px}
+.auth-card .card-inner{padding:18px;border-radius:12px}
+.auth-card .card-inner.light{background:linear-gradient(180deg, rgba(255,255,255,0.95), rgba(255,255,255,0.92));box-shadow:var(--surface-shadow)}
+.auth-card .card-inner.dark{background:transparent}
+
+/* Toasts */
+.toast-container{position:fixed;top:18px;right:18px;z-index:2000;display:flex;flex-direction:column;gap:10px}
+.toast{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:10px;color:#071125;min-width:220px;box-shadow:0 10px 30px rgba(2,6,23,0.2)}
+.toast-message{flex:1;font-weight:600}
+.toast-close{background:transparent;border:none;font-size:14px;opacity:0.7;cursor:pointer}
+.toast-info{background:linear-gradient(90deg,var(--accent),var(--brand-secondary));color:white}
+.toast-success{background:linear-gradient(90deg,var(--success),#06b6a4);color:white}
+.toast-error{background:linear-gradient(90deg,var(--danger),#ef4444);color:white}
+
+.auth-header{margin-bottom:18px;text-align:left}
+.auth-header h2{font-size:24px;margin:0;font-weight:700;color:#0b1220}
+.auth-sub{color:var(--muted);font-size:13px;margin-top:6px}
+.auth-form{display:flex;flex-direction:column;gap:12px;margin-top:12px}
+.auth-input{width:100%}
+.auth-select{width:100%;padding:12px;border-radius:8px}
+.auth-actions{display:flex;gap:10px;align-items:center;justify-content:space-between;margin-top:8px}
+.auth-button{padding:10px 14px;border-radius:8px;font-weight:700}
+.auth-primary{background:linear-gradient(90deg,var(--accent),var(--brand-secondary));color:#fff}
+.auth-toggle{background:transparent;border:none;color:var(--accent-600);font-weight:600}
+
+/* Make headings and important labels a bit bolder across site */
+h1,h2,h3{font-weight:700}
+
+/* Utility */
+.muted{color:var(--muted)}
+
+/* Landing specific */
+.landing-actions{display:flex;gap:14px;justify-content:center}
+.landing-empty{display:flex;gap:18px;justify-content:center}
+.landing-placeholder{flex:1;min-height:120px;border-radius:8px;border:1px dashed #e6edf3;background:linear-gradient(180deg, rgba(245,247,250,0.6), rgba(255,255,255,0.4))}
+
+/* Single large placeholder variant */
+.landing-placeholder.single{flex: none;max-width:480px;min-height:180px;margin:0 auto;border-radius:10px;overflow:hidden;box-shadow:0 12px 30px rgba(2,6,23,0.25)}
+
+

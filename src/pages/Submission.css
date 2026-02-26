@@ -1,0 +1,45 @@
+/* Simple styles to make the submission UI cleaner */
+.submission-controls {
+  margin-bottom: 12px;
+}
+
+.mode-toggle {
+  display: inline-flex;
+  background: #f3f4f6;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+}
+
+.mode-toggle button {
+  padding: 8px 14px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-weight: 600;
+  color: #374151;
+}
+
+.mode-toggle button.active {
+  background: #111827;
+  color: white;
+}
+
+.dropzone {
+  margin-top: 10px;
+  padding: 22px;
+  border: 2px dashed #d1d5db;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #ffffff, #fbfcfd);
+  cursor: pointer;
+}
+
+.dz-inner { text-align: center; }
+.dz-sub { font-size: 12px; color: #6b7280; margin-top: 6px; }
+
+.link-mode { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+.link-input { flex: 1; padding: 8px 10px; border-radius: 6px; border: 1px solid #d1d5db; }
+
+ul.submissions { list-style: none; padding: 0; }
+.submission-item { margin-bottom: 12px; padding: 10px; border: 1px solid #e5e7eb; border-radius: 8px; display: flex; gap: 12px; align-items: flex-start; }
+.submission-item img { max-width: 200px; border-radius: 6px; display: block; }
