@@ -9,6 +9,7 @@ export default function WebinarDetails({ webinars, setWebinars, registered, setR
   const webinar = webinars.find(w => w.id === parseInt(id));
   const [toast, setToast] = useState(null);
   const [wishlist, setWishlist] = useState([]);
+  const [imageError, setImageError] = useState(false);
 
   // Load wishlist when user changes
   useEffect(() => {
@@ -80,7 +81,27 @@ export default function WebinarDetails({ webinars, setWebinars, registered, setR
 
       <div className="details-header">
         <div className="header-image">
-          <img src={webinar.imageUrl} alt={webinar.title} />
+          {!imageError ? (
+            <img 
+              src={webinar.imageUrl} 
+              alt={webinar.title}
+              onError={() => setImageError(true)}
+            />
+          ) : (
+            <div className="image-fallback" style={{
+              width: '100%',
+              height: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: '#f0f0f0',
+              fontSize: '24px',
+              fontWeight: 'bold',
+              color: '#666'
+            }}>
+              {webinar.title}
+            </div>
+          )}
           <div className="header-overlay">
             <span className="category-label">{webinar.category}</span>
             <span className="difficulty-label">{webinar.difficulty}</span>

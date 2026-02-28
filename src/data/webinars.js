@@ -11,7 +11,7 @@ const defaultWebinars = [
     difficulty: "Intermediate",
     maxCapacity: 100,
     registeredCount: 45,
-    imageUrl: "https://images.unsplash.com/photo-1633356122544-f134324ef6db?w=400&h=250&fit=crop",
+    imageUrl: "https://via.placeholder.com/400x250/4F46E5/FFFFFF?text=React",
     recordingUrl: "https://example.com/recordings/react-mastery",
     resources: [
       { name: "React Hooks Guide.pdf", url: "https://example.com/docs/hooks.pdf" },
@@ -34,7 +34,7 @@ const defaultWebinars = [
     difficulty: "Beginner",
     maxCapacity: 150,
     registeredCount: 78,
-    imageUrl: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=400&h=250&fit=crop",
+    imageUrl: "https://via.placeholder.com/400x250/0EA5E9/FFFFFF?text=Cloud",
     recordingUrl: "https://example.com/recordings/cloud-essentials",
     resources: [
       { name: "Cloud Architecture Slides.pdf", url: "https://example.com/docs/cloud.pdf" },
@@ -57,7 +57,7 @@ const defaultWebinars = [
     difficulty: "Intermediate",
     maxCapacity: 80,
     registeredCount: 32,
-    imageUrl: "https://images.unsplash.com/photo-1677442d019cecf8e57c2538fdf87a27a37a24e8?w=400&h=250&fit=crop",
+    imageUrl: "https://via.placeholder.com/400x250/10B981/FFFFFF?text=AI+ML",
     recordingUrl: "https://example.com/recordings/ai-ml-basics",
     resources: [
       { name: "ML Algorithms.pdf", url: "https://example.com/docs/ml.pdf" }
@@ -79,7 +79,7 @@ const defaultWebinars = [
     difficulty: "Beginner",
     maxCapacity: 120,
     registeredCount: 65,
-    imageUrl: "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=400&h=250&fit=crop",
+    imageUrl: "https://via.placeholder.com/400x250/F59E0B/FFFFFF?text=Design",
     recordingUrl: "https://example.com/recordings/web-design",
     resources: [
       { name: "Design System Guide.pdf", url: "https://example.com/docs/design.pdf" }
