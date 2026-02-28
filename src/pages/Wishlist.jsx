@@ -14,21 +14,23 @@ export default function Wishlist({ user }) {
     
     setWebinars(storedWebinars);
     setWishlist(storedWishlist);
-  }, [user]);
+  }, [user?.id]);
 
   const wishlistWebinars = webinars.filter(w => wishlist.includes(w.id));
 
   const handleRemoveFromWishlist = (webinarId) => {
     const updated = wishlist.filter(id => id !== webinarId);
     setWishlist(updated);
-    localStorage.setItem(`wishlist_${user?.id}`, JSON.stringify(updated));
+    if (user?.id) {
+      localStorage.setItem(`wishlist_${user.id}`, JSON.stringify(updated));
+    }
     setToast({ message: "Removed from wishlist", type: "info" });
   };
 
   return (
     <div className="wishlist-container">
       <h1>My Wishlist</h1>
-      {toast && <Toast message={toast.message} type={toast.type} />}
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
       {wishlistWebinars.length === 0 ? (
         <div className="empty-state">

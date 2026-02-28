@@ -315,7 +315,3 @@ export default function AdminDashboard({ webinars, setWebinars }) {
     </div>
   );
 }
-
-    </div>
-  );
-}

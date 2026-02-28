@@ -11,29 +11,53 @@ export default function CreateWebinar({ webinars, setWebinars }) {
 
   const [title, setTitle] = useState("");
   const [speaker, setSpeaker] = useState("");
+  const [speakerEmail, setSpeakerEmail] = useState("");
   const [date, setDate] = useState("");
+  const [time, setTime] = useState("");
   const [description, setDescription] = useState("");
+  const [category, setCategory] = useState("Web Development");
+  const [difficulty, setDifficulty] = useState("Beginner");
+  const [maxCapacity, setMaxCapacity] = useState("100");
+  const [imageUrl, setImageUrl] = useState("");
 
   useEffect(() => {
     if (existing) {
       setTitle(existing.title);
       setSpeaker(existing.speaker);
+      setSpeakerEmail(existing.speakerEmail || "");
       setDate(existing.date);
+      setTime(existing.time || "");
       setDescription(existing.description);
+      setCategory(existing.category || "Web Development");
+      setDifficulty(existing.difficulty || "Beginner");
+      setMaxCapacity(existing.maxCapacity || "100");
+      setImageUrl(existing.imageUrl || "");
     }
   }, [existing]);
 
   const handleSave = () => {
 
     if (!title || !speaker || !date || !description) {
-      alert("Please fill all fields");
+      alert("Please fill all required fields");
       return;
     }
 
     if (editId) {
       const updated = webinars.map(w =>
         w.id === editId
-          ? { ...w, title, speaker, date, description }
+          ? { 
+              ...w, 
+              title, 
+              speaker,
+              speakerEmail,
+              date, 
+              time,
+              description,
+              category,
+              difficulty,
+              maxCapacity: Number(maxCapacity),
+              imageUrl
+            }
           : w
       );
       setWebinars(updated);
@@ -42,8 +66,19 @@ export default function CreateWebinar({ webinars, setWebinars }) {
         id: Date.now(),
         title,
         speaker,
+        speakerEmail: speakerEmail || `${speaker.toLowerCase().replace(' ', '.')}@example.com`,
         date,
-        description
+        time: time || "2:00 PM - 4:00 PM",
+        description,
+        category,
+        difficulty,
+        maxCapacity: Number(maxCapacity),
+        registeredCount: 0,
+        imageUrl: imageUrl || "https://images.unsplash.com/photo-1633356122544-f134324ef6db?w=400&h=250&fit=crop",
+        recordingUrl: "",
+        resources: [],
+        ratings: 0,
+        reviews: []
       };
       setWebinars([...webinars, newWebinar]);
     }
@@ -76,7 +111,7 @@ export default function CreateWebinar({ webinars, setWebinars }) {
 
         <input
           type="text"
-          placeholder="Webinar Title"
+          placeholder="Webinar Title *"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           style={inputStyle}
@@ -84,13 +119,20 @@ export default function CreateWebinar({ webinars, setWebinars }) {
 
         <input
           type="text"
-          placeholder="Speaker Name"
+          placeholder="Speaker Name *"
           value={speaker}
           onChange={(e) => setSpeaker(e.target.value)}
           style={inputStyle}
         />
 
-        {/* DATE ONLY INPUT */}
+        <input
+          type="email"
+          placeholder="Speaker Email"
+          value={speakerEmail}
+          onChange={(e) => setSpeakerEmail(e.target.value)}
+          style={inputStyle}
+        />
+
         <input
           type="date"
           value={date}
@@ -98,8 +140,54 @@ export default function CreateWebinar({ webinars, setWebinars }) {
           style={inputStyle}
         />
 
+        <input
+          type="time"
+          placeholder="Time"
+          value={time}
+          onChange={(e) => setTime(e.target.value)}
+          style={inputStyle}
+        />
+
+        <select
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+          style={inputStyle}
+        >
+          <option value="Web Development">Web Development</option>
+          <option value="Cloud">Cloud</option>
+          <option value="AI/ML">AI/ML</option>
+          <option value="Design">Design</option>
+          <option value="Other">Other</option>
+        </select>
+
+        <select
+          value={difficulty}
+          onChange={(e) => setDifficulty(e.target.value)}
+          style={inputStyle}
+        >
+          <option value="Beginner">Beginner</option>
+          <option value="Intermediate">Intermediate</option>
+          <option value="Advanced">Advanced</option>
+        </select>
+
+        <input
+          type="number"
+          placeholder="Max Capacity"
+          value={maxCapacity}
+          onChange={(e) => setMaxCapacity(e.target.value)}
+          style={inputStyle}
+        />
+
+        <input
+          type="url"
+          placeholder="Image URL"
+          value={imageUrl}
+          onChange={(e) => setImageUrl(e.target.value)}
+          style={inputStyle}
+        />
+
         <textarea
-          placeholder="Webinar Description"
+          placeholder="Webinar Description *"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           style={{ ...inputStyle, height: "100px" }}

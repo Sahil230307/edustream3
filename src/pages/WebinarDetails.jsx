@@ -1,5 +1,5 @@
 import { useParams } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import RatingsReview from "../components/RatingsReview";
 import Toast from "../components/Toast";
 import "./WebinarDetails.css";
@@ -8,9 +8,17 @@ export default function WebinarDetails({ webinars, setWebinars, registered, setR
   const { id } = useParams();
   const webinar = webinars.find(w => w.id === parseInt(id));
   const [toast, setToast] = useState(null);
-  const [wishlist, setWishlist] = useState(() => {
-    return JSON.parse(localStorage.getItem(`wishlist_${user?.id}`)) || [];
-  });
+  const [wishlist, setWishlist] = useState([]);
+
+  // Load wishlist when user changes
+  useEffect(() => {
+    if (user?.id) {
+      const stored = JSON.parse(localStorage.getItem(`wishlist_${user.id}`)) || [];
+      setWishlist(stored);
+    } else {
+      setWishlist([]);
+    }
+  }, [user?.id]);
 
   if (!webinar) {
     return (
@@ -49,12 +57,17 @@ export default function WebinarDetails({ webinars, setWebinars, registered, setR
   };
 
   const handleWishlist = () => {
+    if (!user?.id) {
+      setToast({ message: "Please login to add to wishlist", type: "error" });
+      return;
+    }
+
     const updated = isWishlisted
       ? wishlist.filter(id => id !== webinar.id)
       : [...wishlist, webinar.id];
     
     setWishlist(updated);
-    localStorage.setItem(`wishlist_${user?.id}`, JSON.stringify(updated));
+    localStorage.setItem(`wishlist_${user.id}`, JSON.stringify(updated));
     setToast({
       message: isWishlisted ? "Removed from wishlist" : "Added to wishlist! 🎉",
       type: "info"
@@ -63,7 +76,7 @@ export default function WebinarDetails({ webinars, setWebinars, registered, setR
 
   return (
     <div className="webinar-details-container">
-      {toast && <Toast message={toast.message} type={toast.type} />}
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
       <div className="details-header">
         <div className="header-image">

@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Toast from "../components/Toast";
 import "./WebinarList.css";
@@ -11,9 +11,17 @@ export default function WebinarList({ webinars, user }) {
   const [selectedDifficulty, setSelectedDifficulty] = useState("All");
   const [currentPage, setCurrentPage] = useState(1);
   const [toast, setToast] = useState(null);
-  const [wishlist, setWishlist] = useState(() => {
-    return JSON.parse(localStorage.getItem(`wishlist_${user?.id}`)) || [];
-  });
+  const [wishlist, setWishlist] = useState([]);
+
+  // Load wishlist when user changes
+  useEffect(() => {
+    if (user?.id) {
+      const stored = JSON.parse(localStorage.getItem(`wishlist_${user.id}`)) || [];
+      setWishlist(stored);
+    } else {
+      setWishlist([]);
+    }
+  }, [user?.id]);
 
   // Get unique categories and difficulties
   const categories = ["All", ...new Set(webinars.map(w => w.category))];
@@ -36,12 +44,17 @@ export default function WebinarList({ webinars, user }) {
   const paginatedWebinars = filtered.slice(startIdx, startIdx + ITEMS_PER_PAGE);
 
   const handleAddToWishlist = (webinarId) => {
+    if (!user?.id) {
+      setToast({ message: "Please login to add to wishlist", type: "error" });
+      return;
+    }
+
     const updated = wishlist.includes(webinarId)
       ? wishlist.filter(id => id !== webinarId)
       : [...wishlist, webinarId];
     
     setWishlist(updated);
-    localStorage.setItem(`wishlist_${user?.id}`, JSON.stringify(updated));
+    localStorage.setItem(`wishlist_${user.id}`, JSON.stringify(updated));
     
     const isAdded = !wishlist.includes(webinarId);
     setToast({
@@ -59,7 +72,7 @@ export default function WebinarList({ webinars, user }) {
 
   return (
     <div className="webinar-list-container">
-      {toast && <Toast message={toast.message} type={toast.type} />}
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
       
       <div className="webinar-list-header">
         <h1>Available Webinars</h1>

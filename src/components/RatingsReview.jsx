@@ -72,7 +72,7 @@ export default function RatingsReview({ webinar, webinars, setWebinars, user }) 
         )}
       </div>
 
-      {toast && <Toast message={toast.message} type={toast.type} />}
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
       {showReviewForm && (
         <div className="review-form">
