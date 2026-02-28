@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import "./AdminDashboard.css";
 
 const ASSIGNMENTS_KEY = "edustream_assignments";
 const SUBMISSIONS_KEY = "edustream_submissions";
+const REGISTERED_KEY = "registered";
 
 export default function AdminDashboard({ webinars, setWebinars }) {
 
@@ -12,6 +14,8 @@ export default function AdminDashboard({ webinars, setWebinars }) {
   const [desc, setDesc] = useState("");
   const [due, setDue] = useState("");
   const [submissionsCount, setSubmissionsCount] = useState(0);
+  const [registered, setRegistered] = useState([]);
+  const [activeTab, setActiveTab] = useState("analytics");
 
   useEffect(() => {
     try {
@@ -24,6 +28,11 @@ export default function AdminDashboard({ webinars, setWebinars }) {
     try {
       const subs = JSON.parse(localStorage.getItem(SUBMISSIONS_KEY) || "[]");
       setSubmissionsCount(subs.length || 0);
+    } catch (e) { console.error(e); }
+
+    try {
+      const reg = JSON.parse(localStorage.getItem(REGISTERED_KEY) || "[]");
+      setRegistered(reg);
     } catch (e) { console.error(e); }
   }, []);
 
@@ -43,199 +52,269 @@ export default function AdminDashboard({ webinars, setWebinars }) {
     webinar.title.toLowerCase().includes(search.toLowerCase())
   );
 
+  // Analytics calculations
+  const totalWebinars = webinars.length;
+  const totalRegistrations = registered.length;
+  const avgCapacityUsage = webinars.length > 0 
+    ? Math.round((webinars.reduce((sum, w) => sum + (w.registeredCount / w.maxCapacity), 0) / webinars.length) * 100)
+    : 0;
+  
+  const categoryCounts = {};
+  webinars.forEach(w => {
+    categoryCounts[w.category] = (categoryCounts[w.category] || 0) + 1;
+  });
+
+  const topWebinars = [...webinars]
+    .sort((a, b) => b.registeredCount - a.registeredCount)
+    .slice(0, 5);
+
   return (
-    <div style={{ padding: "60px" }}>
-
-      <h2 style={{ marginBottom: "30px" }}>
-        Admin Dashboard
-      </h2>
-
-      {/* Create Section */}
-      <div style={{
-        background: "white",
-        padding: "25px",
-        borderRadius: "10px",
-        boxShadow: "0 6px 18px rgba(0,0,0,0.08)",
-        marginBottom: "40px",
-        maxWidth: "500px"
-      }}>
-        <h3>Create New Webinar</h3>
-        <p style={{ margin: "10px 0 20px 0" }}>
-          Add new webinars to the platform.
-        </p>
-
-        <Link to="/admin/create">
-          <button style={{
-            background: "#4f46e5",
-            color: "white",
-            padding: "10px 18px",
-            borderRadius: "6px",
-            border: "none",
-            cursor: "pointer"
-          }}>
-            + Create Webinar
-          </button>
-        </Link>
+    <div className="admin-dashboard">
+      <div className="admin-header">
+        <h1>Admin Dashboard</h1>
+        <p>Manage webinars, content, and track analytics</p>
       </div>
-      
-      {/* Assignments Section */}
-      <div style={{
-        background: "white",
-        padding: "20px",
-        borderRadius: "10px",
-        boxShadow: "0 6px 18px rgba(0,0,0,0.06)",
-        marginBottom: "30px",
-        maxWidth: "700px"
-      }}>
-        <h3>Assignments</h3>
-        <p style={{ marginTop: 6 }}>Create assignments for users to submit files.</p>
 
-        <div style={{ display: "flex", gap: 8, marginTop: 10, alignItems: "flex-start" }}>
-          <input placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} style={{padding: 8, flex: 1}} />
-          <input placeholder="Due date" type="date" value={due} onChange={(e) => setDue(e.target.value)} style={{padding: 8}} />
-        </div>
-        <textarea placeholder="Description" value={desc} onChange={(e) => setDesc(e.target.value)} style={{ width: "100%", marginTop: 8, padding: 8 }} />
-        <div style={{ marginTop: 10 }}>
-          <button onClick={() => {
-            if (!title) return alert("Please enter a title");
-            const a = { id: `${Date.now()}-${Math.random().toString(36).slice(2,8)}`, title, description: desc, due };
-            const updated = [a, ...assignments];
-            setAssignments(updated);
-            setTitle(""); setDesc(""); setDue("");
-          }} style={{ background: "#2563eb", color: "white", padding: "8px 12px", borderRadius: 6, border: "none" }}>
-            + Add Assignment
-          </button>
-        </div>
+      <div className="admin-tabs">
+        <button 
+          className={`tab-btn ${activeTab === "analytics" ? "active" : ""}`}
+          onClick={() => setActiveTab("analytics")}
+        >
+          📊 Analytics
+        </button>
+        <button 
+          className={`tab-btn ${activeTab === "webinars" ? "active" : ""}`}
+          onClick={() => setActiveTab("webinars")}
+        >
+          🎓 Webinars
+        </button>
+        <button 
+          className={`tab-btn ${activeTab === "assignments" ? "active" : ""}`}
+          onClick={() => setActiveTab("assignments")}
+        >
+          📝 Assignments
+        </button>
+      </div>
 
-        {assignments.length > 0 && (
-          <div style={{ marginTop: 16 }}>
-            <h4>Existing Assignments</h4>
-            <ul style={{ paddingLeft: 16 }}>
-              {assignments.map((a) => (
-                <li key={a.id} style={{ marginBottom: 8 }}>
-                  <strong>{a.title}</strong> {a.due && <span>• due {a.due}</span>}<div style={{ fontSize: 13, color: '#444' }}>{a.description}</div>
-                  <div style={{ marginTop: 6 }}>
-                    <button onClick={() => {
-                      if (!confirm('Delete assignment?')) return;
-                      setAssignments(assignments.filter(x => x.id !== a.id));
-                    }} style={{ background: '#ef4444', color: 'white', border: 'none', padding: '6px 10px', borderRadius: 6 }}>
+      {/* ANALYTICS TAB */}
+      {activeTab === "analytics" && (
+        <div className="tab-content">
+          <div className="analytics-grid">
+            <div className="stat-card">
+              <div className="stat-icon">🎓</div>
+              <div className="stat-content">
+                <div className="stat-value">{totalWebinars}</div>
+                <div className="stat-label">Total Webinars</div>
+              </div>
+            </div>
+
+            <div className="stat-card">
+              <div className="stat-icon">👥</div>
+              <div className="stat-content">
+                <div className="stat-value">{totalRegistrations}</div>
+                <div className="stat-label">Total Registrations</div>
+              </div>
+            </div>
+
+            <div className="stat-card">
+              <div className="stat-icon">📈</div>
+              <div className="stat-content">
+                <div className="stat-value">{avgCapacityUsage}%</div>
+                <div className="stat-label">Avg Capacity Usage</div>
+              </div>
+            </div>
+
+            <div className="stat-card">
+              <div className="stat-icon">📊</div>
+              <div className="stat-content">
+                <div className="stat-value">{submissionsCount}</div>
+                <div className="stat-label">Total Submissions</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="analytics-content">
+            <div className="analytics-section">
+              <h2>Webinars by Category</h2>
+              <div className="category-list">
+                {Object.entries(categoryCounts).map(([category, count]) => (
+                  <div key={category} className="category-item">
+                    <span className="category-name">{category}</span>
+                    <div className="category-bar">
+                      <div 
+                        className="category-fill"
+                        style={{ width: `${(count / totalWebinars) * 100}%` }}
+                      />
+                    </div>
+                    <span className="category-count">{count}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="analytics-section">
+              <h2>Top Webinars by Registration</h2>
+              <div className="top-webinars-list">
+                {topWebinars.map((webinar, index) => (
+                  <div key={webinar.id} className="top-webinar-item">
+                    <span className="rank">#{index + 1}</span>
+                    <div className="webinar-info">
+                      <h4>{webinar.title}</h4>
+                      <p>{webinar.category}</p>
+                    </div>
+                    <span className="registration-count">
+                      {webinar.registeredCount}/{webinar.maxCapacity}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* WEBINARS TAB */}
+      {activeTab === "webinars" && (
+        <div className="tab-content">
+          <div className="webinar-management">
+            <div className="management-header">
+              <Link to="/admin/create">
+                <button className="btn-primary">+ Create New Webinar</button>
+              </Link>
+              <input
+                type="text"
+                placeholder="Search webinar..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="search-input"
+              />
+            </div>
+
+            <div className="webinar-grid">
+              {filteredWebinars.length > 0 ? (
+                filteredWebinars.map((webinar) => (
+                  <div key={webinar.id} className="webinar-card">
+                    <div className="webinar-image">
+                      <img src={webinar.imageUrl} alt={webinar.title} />
+                      <span className="difficulty-badge">{webinar.difficulty}</span>
+                    </div>
+                    <div className="webinar-details">
+                      <h3>{webinar.title}</h3>
+                      <p className="speaker">By {webinar.speaker}</p>
+                      <p className="date">📅 {webinar.date}</p>
+                      <div className="capacity-info">
+                        <span>Registered: {webinar.registeredCount}/{webinar.maxCapacity}</span>
+                        <div className="capacity-bar">
+                          <div 
+                            className="capacity-fill"
+                            style={{ width: `${(webinar.registeredCount / webinar.maxCapacity) * 100}%` }}
+                          />
+                        </div>
+                      </div>
+                      <div className="card-actions">
+                        <Link to={`/webinar/${webinar.id}`}>
+                          <button className="btn-view">View</button>
+                        </Link>
+                        <Link to={`/admin/edit/${webinar.id}`}>
+                          <button className="btn-edit">Edit</button>
+                        </Link>
+                        <button
+                          className="btn-delete"
+                          onClick={() => handleDelete(webinar.id)}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="no-results">No webinars found.</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ASSIGNMENTS TAB */}
+      {activeTab === "assignments" && (
+        <div className="tab-content">
+          <div className="assignments-section">
+            <h2>Create Assignment</h2>
+            <div className="assignment-form">
+              <div className="form-row">
+                <input 
+                  placeholder="Assignment Title" 
+                  value={title} 
+                  onChange={(e) => setTitle(e.target.value)} 
+                  className="form-input"
+                />
+                <input 
+                  placeholder="Due Date" 
+                  type="date" 
+                  value={due} 
+                  onChange={(e) => setDue(e.target.value)} 
+                  className="form-input"
+                />
+              </div>
+              <textarea 
+                placeholder="Description" 
+                value={desc} 
+                onChange={(e) => setDesc(e.target.value)} 
+                className="form-textarea"
+                rows="4"
+              />
+              <button 
+                onClick={() => {
+                  if (!title) return alert("Please enter a title");
+                  const a = { id: `${Date.now()}-${Math.random().toString(36).slice(2,8)}`, title, description: desc, due };
+                  const updated = [a, ...assignments];
+                  setAssignments(updated);
+                  setTitle(""); setDesc(""); setDue("");
+                }} 
+                className="btn-primary"
+              >
+                + Add Assignment
+              </button>
+            </div>
+
+            {assignments.length > 0 && (
+              <div className="assignments-list">
+                <h2>Existing Assignments</h2>
+                {assignments.map((a) => (
+                  <div key={a.id} className="assignment-item">
+                    <div className="assignment-header">
+                      <h4>{a.title}</h4>
+                      {a.due && <span className="due-date">📅 Due: {a.due}</span>}
+                    </div>
+                    <p className="assignment-desc">{a.description}</p>
+                    <button 
+                      onClick={() => {
+                        if (!confirm('Delete assignment?')) return;
+                        setAssignments(assignments.filter(x => x.id !== a.id));
+                      }} 
+                      className="btn-delete-small"
+                    >
                       Delete
                     </button>
                   </div>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </div>
-
-      {/* Submissions Summary for Admin */}
-      <div style={{
-        background: "white",
-        padding: "18px",
-        borderRadius: "10px",
-        boxShadow: "0 6px 18px rgba(0,0,0,0.04)",
-        marginBottom: "30px",
-        maxWidth: "500px"
-      }}>
-        <h3>Submissions</h3>
-        <p style={{ marginTop: 6 }}>Total submissions: <strong>{submissionsCount}</strong></p>
-        <Link to="/submission">
-          <button style={{ background: '#0ea5a0', color: 'white', padding: '8px 12px', borderRadius: 6, border: 'none' }}>View Submissions</button>
-        </Link>
-      </div>
-
-      {/* Search */}
-      <div style={{ marginBottom: "25px" }}>
-        <input
-          type="text"
-          placeholder="Search webinar..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          style={{
-            padding: "10px",
-            width: "300px",
-            borderRadius: "6px",
-            border: "1px solid #ccc"
-          }}
-        />
-      </div>
-
-      {/* Webinar List */}
-      <div style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-        gap: "20px"
-      }}>
-
-        {filteredWebinars.length > 0 ? (
-          filteredWebinars.map((webinar) => (
-            <div key={webinar.id} style={{
-              background: "white",
-              padding: "20px",
-              borderRadius: "10px",
-              boxShadow: "0 6px 18px rgba(0,0,0,0.05)"
-            }}>
-              <h3>{webinar.title}</h3>
-              <p><strong>Date:</strong> {webinar.date}</p>
-              <p style={{ margin: "10px 0" }}>
-                {webinar.description.substring(0, 80)}...
-              </p>
-
-              <div style={{
-                display: "flex",
-                gap: "10px",
-                marginTop: "10px"
-              }}>
-
-                <Link to={`/webinar/${webinar.id}`}>
-                  <button style={{
-                    background: "#10b981",
-                    color: "white",
-                    padding: "6px 12px",
-                    borderRadius: "6px",
-                    border: "none",
-                    cursor: "pointer"
-                  }}>
-                    View
-                  </button>
-                </Link>
-
-                <Link to={`/admin/edit/${webinar.id}`}>
-                  <button style={{
-                    background: "#f59e0b",
-                    color: "white",
-                    padding: "6px 12px",
-                    borderRadius: "6px",
-                    border: "none",
-                    cursor: "pointer"
-                  }}>
-                    Edit
-                  </button>
-                </Link>
-
-                <button
-                  onClick={() => handleDelete(webinar.id)}
-                  style={{
-                    background: "#ef4444",
-                    color: "white",
-                    padding: "6px 12px",
-                    borderRadius: "6px",
-                    border: "none",
-                    cursor: "pointer"
-                  }}
-                >
-                  Delete
-                </button>
-
+                ))}
               </div>
-            </div>
-          ))
-        ) : (
-          <p>No webinars found.</p>
-        )}
+            )}
 
-      </div>
+            <div className="submissions-summary">
+              <h2>Submissions</h2>
+              <p>Total submissions: <strong>{submissionsCount}</strong></p>
+              <Link to="/submission">
+                <button className="btn-primary">View All Submissions</button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
     </div>
   );

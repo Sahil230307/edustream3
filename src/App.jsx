@@ -1,4 +1,3 @@
-
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useState, useEffect } from "react";
 
@@ -16,6 +15,8 @@ import AuthLanding from "./pages/AuthLanding";
 import CreateWebinar from "./pages/CreateWebinar";
 import PastWebinars from "./pages/PastWebinars";
 import Submission from "./pages/Submission";
+import UserProfile from "./pages/UserProfile";
+import Wishlist from "./pages/Wishlist";
 
 import defaultWebinars from "./data/webinars";
 
@@ -24,6 +25,9 @@ function App() {
   const [user, setUser] = useState(null);
   const [webinars, setWebinars] = useState([]);
   const [registered, setRegistered] = useState([]);
+  const [darkMode, setDarkMode] = useState(() => {
+    return JSON.parse(localStorage.getItem("darkMode")) || false;
+  });
 
   // Load from localStorage
   useEffect(() => {
@@ -47,10 +51,20 @@ function App() {
     localStorage.setItem("registered", JSON.stringify(registered));
   }, [registered]);
 
+  // Save dark mode
+  useEffect(() => {
+    localStorage.setItem("darkMode", JSON.stringify(darkMode));
+    if (darkMode) {
+      document.body.classList.add("dark-mode");
+    } else {
+      document.body.classList.remove("dark-mode");
+    }
+  }, [darkMode]);
+
   return (
     <BrowserRouter>
 
-      <Navbar user={user} setUser={setUser} />
+      <Navbar user={user} setUser={setUser} darkMode={darkMode} setDarkMode={setDarkMode} />
 
       <Routes>
 
@@ -70,7 +84,7 @@ function App() {
 
         <Route 
           path="/webinars" 
-          element={<WebinarList webinars={webinars} />} 
+          element={<WebinarList webinars={webinars} user={user} />} 
         />
 
         <Route 
@@ -78,6 +92,7 @@ function App() {
           element={
             <WebinarDetails 
               webinars={webinars}
+              setWebinars={setWebinars}
               registered={registered}
               setRegistered={setRegistered}
               user={user}
@@ -94,6 +109,26 @@ function App() {
                 webinars={webinars} 
                 registered={registered} 
               />
+            </ProtectedRoute>
+          } 
+        />
+
+        {/* User Profile */}
+        <Route 
+          path="/profile" 
+          element={
+            <ProtectedRoute user={user} role="user">
+              <UserProfile user={user} setUser={setUser} />
+            </ProtectedRoute>
+          } 
+        />
+
+        {/* Wishlist */}
+        <Route 
+          path="/wishlist" 
+          element={
+            <ProtectedRoute user={user} role="user">
+              <Wishlist user={user} />
             </ProtectedRoute>
           } 
         />
@@ -123,6 +158,18 @@ function App() {
 
         <Route 
           path="/admin/create"
+          element={
+            <ProtectedRoute user={user} role="admin">
+              <CreateWebinar 
+                webinars={webinars}
+                setWebinars={setWebinars}
+              />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route 
+          path="/admin/edit/:id"
           element={
             <ProtectedRoute user={user} role="admin">
               <CreateWebinar 
