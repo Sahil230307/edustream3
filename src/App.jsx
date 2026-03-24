@@ -18,38 +18,38 @@ import Submission from "./pages/Submission";
 import UserProfile from "./pages/UserProfile";
 import Wishlist from "./pages/Wishlist";
 
-import defaultWebinars from "./data/webinars";
+import { webinarAPI } from "./services/api";
 
 function App() {
 
   const [user, setUser] = useState(null);
   const [webinars, setWebinars] = useState([]);
-  const [registered, setRegistered] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [darkMode, setDarkMode] = useState(() => {
     return JSON.parse(localStorage.getItem("darkMode")) || false;
   });
 
-  // Load from localStorage
+  // Load user and webinars
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem("user"));
-    const storedWebinars = JSON.parse(localStorage.getItem("webinars"));
-    const storedRegistered = JSON.parse(localStorage.getItem("registered"));
-
     if (storedUser) setUser(storedUser);
-    if (storedWebinars) setWebinars(storedWebinars);
-    else setWebinars(defaultWebinars);
-    if (storedRegistered) setRegistered(storedRegistered);
+
+    // Fetch webinars from backend
+    const fetchWebinars = async () => {
+      try {
+        const data = await webinarAPI.getAll();
+        setWebinars(data);
+      } catch (error) {
+        console.error("Failed to load webinars:", error);
+        // If API fails, use empty array (can load demo data as fallback)
+        setWebinars([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchWebinars();
   }, []);
-
-  // Save webinars
-  useEffect(() => {
-    localStorage.setItem("webinars", JSON.stringify(webinars));
-  }, [webinars]);
-
-  // Save registered
-  useEffect(() => {
-    localStorage.setItem("registered", JSON.stringify(registered));
-  }, [registered]);
 
   // Save dark mode
   useEffect(() => {
@@ -92,9 +92,6 @@ function App() {
           element={
             <WebinarDetails 
               webinars={webinars}
-              setWebinars={setWebinars}
-              registered={registered}
-              setRegistered={setRegistered}
               user={user}
             />
           } 
@@ -106,8 +103,8 @@ function App() {
           element={
             <ProtectedRoute user={user} role="user">
               <Dashboard 
-                webinars={webinars} 
-                registered={registered} 
+                webinars={webinars}
+                user={user}
               />
             </ProtectedRoute>
           } 

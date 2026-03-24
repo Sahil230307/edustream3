@@ -2,16 +2,18 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import PasswordInput from "../components/PasswordInput";
 import Toast from "../components/Toast";
+import { authAPI, setToken } from "../services/api";
 
 export default function Signup({ setUser }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("user");
+  const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState(null);
   const navigate = useNavigate();
 
-  const handleSignup = (e) => {
+  const handleSignup = async (e) => {
     e.preventDefault();
 
     if (!name.trim() || !email.trim() || !password.trim()) {
@@ -19,31 +21,30 @@ export default function Signup({ setUser }) {
       return;
     }
 
-    // Ensure users list exists in localStorage
-    const stored = JSON.parse(localStorage.getItem("users")) || [];
+    try {
+      setLoading(true);
+      await authAPI.signup({ name, email, password, role });
 
-    // Prevent duplicate emails
-    if (stored.find((u) => u.email === email)) {
-      setToast({ message: "An account with this email already exists. Please login.", type: "error" });
-      navigate("/login");
-      return;
+      // After signup, auto-login
+      const loginResponse = await authAPI.login({ email, password });
+      setToken(loginResponse.token);
+      
+      const userData = { ...loginResponse.user, isLoggedIn: true };
+      localStorage.setItem("user", JSON.stringify(userData));
+      setUser(userData);
+
+      setToast({ message: "Account created successfully!", type: "success" });
+      
+      if (userData.role === "admin") {
+        setTimeout(() => navigate("/admin"), 500);
+      } else {
+        setTimeout(() => navigate("/dashboard"), 500);
+      }
+    } catch (error) {
+      setToast({ message: error.message || "Signup failed. Please try again.", type: "error" });
+    } finally {
+      setLoading(false);
     }
-
-    const newUser = {
-      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      name,
-      email,
-      role,
-      // Note: storing plaintext passwords is only for demo purposes
-      password,
-    };
-
-    stored.push(newUser);
-    localStorage.setItem("users", JSON.stringify(stored));
-
-    // Redirect to login so user can authenticate
-    setToast({ message: "Account created — please login.", type: "success" });
-    setTimeout(() => navigate("/login"), 900);
   };
 
   return (
@@ -90,8 +91,12 @@ export default function Signup({ setUser }) {
           </select>
 
           <div className="auth-actions">
-            <button className="auth-button auth-primary" type="submit">
-              Signup
+            <button 
+              className="auth-button auth-primary" 
+              type="submit"
+              disabled={loading}
+            >
+              {loading ? "Creating Account..." : "Signup"}
             </button>
             <div className="muted">Already have an account? Login</div>
           </div>

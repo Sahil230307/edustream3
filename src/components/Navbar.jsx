@@ -1,4 +1,5 @@
 import { NavLink, useNavigate } from "react-router-dom";
+import { clearToken } from "../services/api";
 import "./Navbar.css";
 
 export default function Navbar({ user, setUser, darkMode, setDarkMode }) {
@@ -7,6 +8,7 @@ export default function Navbar({ user, setUser, darkMode, setDarkMode }) {
 
   const handleLogout = () => {
     localStorage.removeItem("user");
+    clearToken();
     setUser(null);
     navigate("/");
   };
