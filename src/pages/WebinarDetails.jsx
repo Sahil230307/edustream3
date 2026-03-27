@@ -2,14 +2,22 @@ import { useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import RatingsReview from "../components/RatingsReview";
 import Toast from "../components/Toast";
+import { getWebinarById, registerForWebinar } from "../services/api";
 import "./WebinarDetails.css";
 
-export default function WebinarDetails({ webinars, setWebinars, registered, setRegistered, user }) {
+export default function WebinarDetails({ user }) {
   const { id } = useParams();
-  const webinar = webinars.find(w => w.id === parseInt(id));
+
+  const [webinar, setWebinar] = useState(null);
   const [toast, setToast] = useState(null);
   const [wishlist, setWishlist] = useState([]);
   const [imageError, setImageError] = useState(false);
+  const [isRegistered, setIsRegistered] = useState(false);
+
+  // Load webinar details
+  useEffect(() => {
+    fetchWebinarDetails();
+  }, [id]);
 
   // Load wishlist when user changes
   useEffect(() => {
@@ -20,6 +28,24 @@ export default function WebinarDetails({ webinars, setWebinars, registered, setR
       setWishlist([]);
     }
   }, [user?.id]);
+
+  // Check if already registered (frontend-side quick check)
+  useEffect(() => {
+    if (user?.id) {
+      const storedRegistered = JSON.parse(localStorage.getItem(`registered_${user.id}`)) || [];
+      setIsRegistered(storedRegistered.includes(Number(id)));
+    }
+  }, [user?.id, id]);
+
+  const fetchWebinarDetails = async () => {
+    try {
+      const res = await getWebinarById(id);
+      setWebinar(res.data);
+    } catch (error) {
+      console.error("Error fetching webinar details:", error);
+      setToast({ message: "Failed to load webinar details", type: "error" });
+    }
+  };
 
   if (!webinar) {
     return (
@@ -32,28 +58,51 @@ export default function WebinarDetails({ webinars, setWebinars, registered, setR
     );
   }
 
-  const isRegistered = registered.includes(webinar.id);
-  const isWishlisted = wishlist.includes(webinar.id);
-  const capacityPercentage = (webinar.registeredCount / webinar.maxCapacity) * 100;
+  const isWishlisted = wishlist.includes(Number(webinar.id));
 
-  const handleRegister = () => {
+  // Safe fallback values (until backend stores these properly)
+  const category = webinar.category || "General";
+  const difficulty = webinar.difficulty || "Beginner";
+  const speakerEmail = webinar.speakerEmail || "Not provided";
+  const maxCapacity = webinar.maxCapacity || 100;
+  const registeredCount = webinar.registeredCount || 0;
+  const ratings = webinar.ratings || 0;
+  const reviews = webinar.reviews || [];
+  const resources = webinar.resources || [];
+
+  const capacityPercentage = (registeredCount / maxCapacity) * 100;
+
+  const handleRegister = async () => {
     if (!user) {
       setToast({ message: "Please login to register", type: "error" });
       return;
     }
 
-    if (webinar.registeredCount >= webinar.maxCapacity) {
-      setToast({ message: "This webinar is at full capacity", type: "error" });
+    if (isRegistered) {
+      setToast({ message: "You are already registered", type: "info" });
       return;
     }
 
-    if (!isRegistered) {
-      setRegistered([...registered, webinar.id]);
-      const updated = webinars.map(w =>
-        w.id === webinar.id ? { ...w, registeredCount: w.registeredCount + 1 } : w
-      );
-      setWebinars(updated);
-      setToast({ message: "Successfully registered! 🎉", type: "success" });
+    try {
+      const res = await registerForWebinar(user.id, webinar.id);
+
+      if (res.data.message === "Registration successful") {
+        setToast({ message: "Successfully registered! 🎉", type: "success" });
+
+        // local tracking for frontend button state
+        const storedRegistered = JSON.parse(localStorage.getItem(`registered_${user.id}`)) || [];
+        const updated = [...storedRegistered, Number(webinar.id)];
+        localStorage.setItem(`registered_${user.id}`, JSON.stringify(updated));
+        setIsRegistered(true);
+      } else {
+        setToast({
+          message: res.data.message || "Registration failed",
+          type: "error",
+        });
+      }
+    } catch (error) {
+      console.error("Registration error:", error);
+      setToast({ message: "Failed to register", type: "error" });
     }
   };
 
@@ -64,61 +113,75 @@ export default function WebinarDetails({ webinars, setWebinars, registered, setR
     }
 
     const updated = isWishlisted
-      ? wishlist.filter(id => id !== webinar.id)
+      ? wishlist.filter((wid) => wid !== webinar.id)
       : [...wishlist, webinar.id];
-    
+
     setWishlist(updated);
     localStorage.setItem(`wishlist_${user.id}`, JSON.stringify(updated));
+
     setToast({
       message: isWishlisted ? "Removed from wishlist" : "Added to wishlist! 🎉",
-      type: "info"
+      type: "info",
     });
   };
 
   return (
     <div className="webinar-details-container">
-      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
 
       <div className="details-header">
         <div className="header-image">
           {!imageError ? (
-            <img 
-              src={webinar.imageUrl} 
+            <img
+              src={webinar.imageUrl || "https://via.placeholder.com/800x400?text=Webinar"}
               alt={webinar.title}
               onError={() => setImageError(true)}
             />
           ) : (
-            <div className="image-fallback" style={{
-              width: '100%',
-              height: '100%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              backgroundColor: '#f0f0f0',
-              fontSize: '24px',
-              fontWeight: 'bold',
-              color: '#666'
-            }}>
+            <div
+              className="image-fallback"
+              style={{
+                width: "100%",
+                height: "100%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: "#f0f0f0",
+                fontSize: "24px",
+                fontWeight: "bold",
+                color: "#666",
+              }}
+            >
               {webinar.title}
             </div>
           )}
           <div className="header-overlay">
-            <span className="category-label">{webinar.category}</span>
-            <span className="difficulty-label">{webinar.difficulty}</span>
+            <span className="category-label">{category}</span>
+            <span className="difficulty-label">{difficulty}</span>
           </div>
         </div>
 
         <div className="header-content">
           <h1>{webinar.title}</h1>
-          
+
           <div className="speaker-info">
             <span className="speaker-name">By {webinar.speaker}</span>
-            <span className="speaker-email">📧 {webinar.speakerEmail}</span>
+            <span className="speaker-email">📧 {speakerEmail}</span>
           </div>
 
           <div className="rating-section">
-            <div className="stars">{'⭐'.repeat(Math.round(webinar.ratings))}</div>
-            <span className="rating-text">{webinar.ratings}/5 ({webinar.reviews?.length || 0} reviews)</span>
+            <div className="stars">
+              {ratings > 0 ? "⭐".repeat(Math.round(ratings)) : "No ratings yet"}
+            </div>
+            <span className="rating-text">
+              {ratings}/5 ({reviews.length} reviews)
+            </span>
           </div>
 
           <div className="webinar-meta">
@@ -128,38 +191,43 @@ export default function WebinarDetails({ webinars, setWebinars, registered, setR
             </div>
             <div className="meta-item">
               <span className="meta-label">⏰ Time</span>
-              <span className="meta-value">{webinar.time}</span>
+              <span className="meta-value">{webinar.time || "Not specified"}</span>
             </div>
             <div className="meta-item">
               <span className="meta-label">👥 Capacity</span>
-              <span className="meta-value">{webinar.registeredCount}/{webinar.maxCapacity}</span>
+              <span className="meta-value">{registeredCount}/{maxCapacity}</span>
             </div>
           </div>
 
           <div className="capacity-bar">
-            <div className="capacity-fill" style={{ width: `${capacityPercentage}%` }} />
+            <div
+              className="capacity-fill"
+              style={{ width: `${capacityPercentage}%` }}
+            />
           </div>
 
           <div className="action-buttons">
-            <button 
-              className={`btn btn-register ${isRegistered ? 'registered' : ''}`}
+            <button
+              className={`btn btn-register ${isRegistered ? "registered" : ""}`}
               onClick={handleRegister}
-              disabled={isRegistered || webinar.registeredCount >= webinar.maxCapacity}
+              disabled={isRegistered}
             >
-              {isRegistered ? '✓ Registered' : webinar.registeredCount >= webinar.maxCapacity ? 'Full Capacity' : 'Register Now'}
+              {isRegistered ? "✓ Registered" : "Register Now"}
             </button>
-            
-            <button 
-              className={`btn btn-wishlist ${isWishlisted ? 'active' : ''}`}
+
+            <button
+              className={`btn btn-wishlist ${isWishlisted ? "active" : ""}`}
               onClick={handleWishlist}
             >
-              {isWishlisted ? '❤️ Remove from Wishlist' : '🤍 Add to Wishlist'}
+              {isWishlisted ? "❤️ Remove from Wishlist" : "🤍 Add to Wishlist"}
             </button>
           </div>
 
           {user && (
             <div className="registration-note">
-              {isRegistered ? '✓ You are registered for this webinar' : 'Register to join this webinar'}
+              {isRegistered
+                ? "✓ You are registered for this webinar"
+                : "Register to join this webinar"}
             </div>
           )}
         </div>
@@ -172,15 +240,15 @@ export default function WebinarDetails({ webinars, setWebinars, registered, setR
             <p>{webinar.description}</p>
           </section>
 
-          {webinar.resources && webinar.resources.length > 0 && (
+          {resources.length > 0 && (
             <section className="resources-section">
               <h2>Resources</h2>
               <div className="resources-list">
-                {webinar.resources.map((resource, idx) => (
-                  <a 
-                    key={idx} 
-                    href={resource.url} 
-                    target="_blank" 
+                {resources.map((resource, idx) => (
+                  <a
+                    key={idx}
+                    href={resource.url}
+                    target="_blank"
                     rel="noopener noreferrer"
                     className="resource-item"
                   >
@@ -197,17 +265,22 @@ export default function WebinarDetails({ webinars, setWebinars, registered, setR
             <section className="recording-section">
               <h2>Recording</h2>
               <p>Access the webinar recording and materials</p>
-              <a href={webinar.recordingUrl} target="_blank" rel="noopener noreferrer" className="btn btn-recording">
+              <a
+                href={webinar.recordingUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-recording"
+              >
                 ► Watch Recording
               </a>
             </section>
           )}
 
-          {user && (
-            <RatingsReview 
-              webinar={webinar} 
-              webinars={webinars}
-              setWebinars={setWebinars}
+          {user && webinar && (
+            <RatingsReview
+              webinar={webinar}
+              webinars={[webinar]}
+              setWebinars={() => {}}
               user={user}
             />
           )}
@@ -218,20 +291,23 @@ export default function WebinarDetails({ webinars, setWebinars, registered, setR
             <h3>Webinar Details</h3>
             <div className="info-item">
               <span className="label">Category</span>
-              <span className="value">{webinar.category}</span>
+              <span className="value">{category}</span>
             </div>
             <div className="info-item">
               <span className="label">Difficulty</span>
-              <span className="value">{webinar.difficulty}</span>
+              <span className="value">{difficulty}</span>
             </div>
             <div className="info-item">
               <span className="label">Seats Available</span>
-              <span className="value">{webinar.maxCapacity - webinar.registeredCount}</span>
+              <span className="value">{maxCapacity - registeredCount}</span>
             </div>
             <div className="info-item">
               <span className="label">Status</span>
-              <span className="value" style={{ color: webinar.registeredCount >= webinar.maxCapacity ? '#e74c3c' : '#27ae60' }}>
-                {webinar.registeredCount >= webinar.maxCapacity ? 'Full' : 'Open'}
+              <span
+                className="value"
+                style={{ color: registeredCount >= maxCapacity ? "#e74c3c" : "#27ae60" }}
+              >
+                {registeredCount >= maxCapacity ? "Full" : "Open"}
               </span>
             </div>
           </div>
@@ -239,8 +315,8 @@ export default function WebinarDetails({ webinars, setWebinars, registered, setR
           <div className="speaker-card">
             <h3>Speaker</h3>
             <p className="speaker-name">{webinar.speaker}</p>
-            <p className="speaker-email">{webinar.speakerEmail}</p>
-            <p>Expert instructor with extensive experience in {webinar.category}</p>
+            <p className="speaker-email">{speakerEmail}</p>
+            <p>Expert instructor with extensive experience in {category}</p>
           </div>
         </div>
       </div>

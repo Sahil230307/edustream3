@@ -1,10 +1,24 @@
 import { Link } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { getAllWebinars } from "../services/api";
 import "./Home.css";
 
-export default function Home({ webinars }) {
-
+export default function Home() {
+  const [webinars, setWebinars] = useState([]);
   const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    fetchWebinars();
+  }, []);
+
+  const fetchWebinars = async () => {
+    try {
+      const res = await getAllWebinars();
+      setWebinars(res.data);
+    } catch (error) {
+      console.error("Error fetching webinars:", error);
+    }
+  };
 
   const filteredWebinars = webinars?.filter((webinar) =>
     webinar.title.toLowerCase().includes(search.toLowerCase())
@@ -12,7 +26,6 @@ export default function Home({ webinars }) {
 
   return (
     <div>
-
       {/* HERO SECTION */}
       <section className="hero">
         <div className="hero-inner">
@@ -46,13 +59,12 @@ export default function Home({ webinars }) {
 
       {/* WEBINAR PREVIEW SECTION */}
       <section className="webinar-preview">
-
         {filteredWebinars && filteredWebinars.length > 0 ? (
           filteredWebinars.slice(0, 6).map((webinar) => (
             <div key={webinar.id} className="webinar-card">
               <h3>{webinar.title}</h3>
               <p><strong>Date:</strong> {webinar.date}</p>
-              <p>{webinar.description.substring(0, 80)}...</p>
+              <p>{webinar.description?.substring(0, 80)}...</p>
 
               <Link to={`/webinar/${webinar.id}`}>
                 <button className="secondary-btn">
@@ -66,12 +78,10 @@ export default function Home({ webinars }) {
             No webinars found.
           </p>
         )}
-
       </section>
 
       {/* FEATURES SECTION */}
       <section className="features">
-
         <div className="feature-card">
           <h3>Live Sessions</h3>
           <p>Interactive real-time sessions with Q&A</p>
@@ -86,9 +96,7 @@ export default function Home({ webinars }) {
           <h3>Access Recordings</h3>
           <p>Rewatch and revisit sessions anytime</p>
         </div>
-
       </section>
-
     </div>
   );
 }

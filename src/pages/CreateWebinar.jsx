@@ -1,13 +1,17 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import {
+  createWebinar,
+  getWebinarById,
+  updateWebinar,
+  deleteWebinar,
+} from "../services/api";
 
-export default function CreateWebinar({ webinars, setWebinars }) {
-
+export default function CreateWebinar() {
   const navigate = useNavigate();
   const { id } = useParams(); // for edit route
 
-  const editId = Number(id);
-  const existing = webinars.find(w => w.id === editId);
+  const editId = id ? Number(id) : null;
 
   const [title, setTitle] = useState("");
   const [speaker, setSpeaker] = useState("");
@@ -21,94 +25,99 @@ export default function CreateWebinar({ webinars, setWebinars }) {
   const [imageUrl, setImageUrl] = useState("");
 
   useEffect(() => {
-    if (existing) {
-      setTitle(existing.title);
-      setSpeaker(existing.speaker);
-      setSpeakerEmail(existing.speakerEmail || "");
-      setDate(existing.date);
-      setTime(existing.time || "");
-      setDescription(existing.description);
-      setCategory(existing.category || "Web Development");
-      setDifficulty(existing.difficulty || "Beginner");
-      setMaxCapacity(existing.maxCapacity || "100");
-      setImageUrl(existing.imageUrl || "");
+    if (editId) {
+      fetchWebinar();
     }
-  }, [existing]);
+  }, [editId]);
 
-  const handleSave = () => {
+  const fetchWebinar = async () => {
+    try {
+      const res = await getWebinarById(editId);
+      const existing = res.data;
 
+      if (existing) {
+        setTitle(existing.title || "");
+        setSpeaker(existing.speaker || "");
+        setSpeakerEmail(existing.speakerEmail || "");
+        setDate(existing.date || "");
+        setTime(existing.time || "");
+        setDescription(existing.description || "");
+        setCategory(existing.category || "Web Development");
+        setDifficulty(existing.difficulty || "Beginner");
+        setMaxCapacity(existing.maxCapacity || "100");
+        setImageUrl(existing.imageUrl || "");
+      }
+    } catch (error) {
+      console.error("Error fetching webinar:", error);
+      alert("Failed to load webinar details");
+    }
+  };
+
+  const handleSave = async () => {
     if (!title || !speaker || !date || !description) {
       alert("Please fill all required fields");
       return;
     }
 
-    if (editId) {
-      const updated = webinars.map(w =>
-        w.id === editId
-          ? { 
-              ...w, 
-              title, 
-              speaker,
-              speakerEmail,
-              date, 
-              time,
-              description,
-              category,
-              difficulty,
-              maxCapacity: Number(maxCapacity),
-              imageUrl
-            }
-          : w
-      );
-      setWebinars(updated);
-    } else {
-      const newWebinar = {
-        id: Date.now(),
-        title,
-        speaker,
-        speakerEmail: speakerEmail || `${speaker.toLowerCase().replace(' ', '.')}@example.com`,
-        date,
-        time: time || "2:00 PM - 4:00 PM",
-        description,
-        category,
-        difficulty,
-        maxCapacity: Number(maxCapacity),
-        registeredCount: 0,
-        imageUrl: imageUrl || "https://images.unsplash.com/photo-1633356122544-f134324ef6db?w=400&h=250&fit=crop",
-        recordingUrl: "",
-        resources: [],
-        ratings: 0,
-        reviews: []
-      };
-      setWebinars([...webinars, newWebinar]);
-    }
+    // Sending only backend-supported fields for now
+    const webinarData = {
+      title,
+      speaker,
+      date,
+      time: time || "2:00 PM - 4:00 PM",
+      description,
+      imageUrl:
+        imageUrl ||
+        "https://images.unsplash.com/photo-1633356122544-f134324ef6db?w=400&h=250&fit=crop",
+      meetingLink: "",
+      recordingUrl: "",
+      materials: "",
+    };
 
-    navigate("/admin");
+    try {
+      if (editId) {
+        await updateWebinar(editId, webinarData);
+        alert("Webinar updated successfully");
+      } else {
+        await createWebinar(webinarData);
+        alert("Webinar created successfully");
+      }
+
+      navigate("/admin");
+    } catch (error) {
+      console.error("Error saving webinar:", error);
+      alert("Failed to save webinar");
+    }
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     const confirmDelete = window.confirm("Delete this webinar?");
-    if (confirmDelete) {
-      const filtered = webinars.filter(w => w.id !== editId);
-      setWebinars(filtered);
+    if (!confirmDelete) return;
+
+    try {
+      await deleteWebinar(editId);
+      alert("Webinar deleted successfully");
       navigate("/admin");
+    } catch (error) {
+      console.error("Error deleting webinar:", error);
+      alert("Failed to delete webinar");
     }
   };
 
   return (
     <div style={{ padding: "60px", maxWidth: "600px", margin: "auto" }}>
-
       <h2 style={{ marginBottom: "25px" }}>
         {editId ? "Edit Webinar" : "Create Webinar"}
       </h2>
 
-      <div style={{
-        background: "white",
-        padding: "30px",
-        borderRadius: "10px",
-        boxShadow: "0 6px 18px rgba(0,0,0,0.08)"
-      }}>
-
+      <div
+        style={{
+          background: "white",
+          padding: "30px",
+          borderRadius: "10px",
+          boxShadow: "0 6px 18px rgba(0,0,0,0.08)",
+        }}
+      >
         <input
           type="text"
           placeholder="Webinar Title *"
@@ -199,15 +208,11 @@ export default function CreateWebinar({ webinars, setWebinars }) {
           </button>
 
           {editId && (
-            <button
-              onClick={handleDelete}
-              style={deleteBtn}
-            >
+            <button onClick={handleDelete} style={deleteBtn}>
               Delete
             </button>
           )}
         </div>
-
       </div>
     </div>
   );
@@ -218,7 +223,7 @@ const inputStyle = {
   padding: "10px",
   marginBottom: "15px",
   borderRadius: "6px",
-  border: "1px solid #ccc"
+  border: "1px solid #ccc",
 };
 
 const primaryBtn = {
@@ -228,7 +233,7 @@ const primaryBtn = {
   borderRadius: "6px",
   border: "none",
   cursor: "pointer",
-  marginRight: "10px"
+  marginRight: "10px",
 };
 
 const deleteBtn = {
@@ -237,5 +242,5 @@ const deleteBtn = {
   padding: "10px 18px",
   borderRadius: "6px",
   border: "none",
-  cursor: "pointer"
+  cursor: "pointer",
 };

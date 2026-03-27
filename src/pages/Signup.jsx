@@ -2,14 +2,13 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import PasswordInput from "../components/PasswordInput";
 import Toast from "../components/Toast";
-import { authAPI, setToken } from "../services/api";
+import { registerUser } from "../services/api";
 
 export default function Signup({ setUser }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("user");
-  const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState(null);
   const navigate = useNavigate();
 
@@ -22,28 +21,33 @@ export default function Signup({ setUser }) {
     }
 
     try {
-      setLoading(true);
-      await authAPI.signup({ name, email, password, role });
+      const res = await registerUser({
+        name,
+        email,
+        password,
+        role: role.toUpperCase(), // backend expects USER / ADMIN
+      });
 
-      // After signup, auto-login
-      const loginResponse = await authAPI.login({ email, password });
-      setToken(loginResponse.token);
-      
-      const userData = { ...loginResponse.user, isLoggedIn: true };
-      localStorage.setItem("user", JSON.stringify(userData));
-      setUser(userData);
+      if (res.data.message === "User registered successfully") {
+        setToast({
+          message: "Account created successfully — please login.",
+          type: "success",
+        });
 
-      setToast({ message: "Account created successfully!", type: "success" });
-      
-      if (userData.role === "admin") {
-        setTimeout(() => navigate("/admin"), 500);
+        setTimeout(() => navigate("/login"), 1000);
       } else {
-        setTimeout(() => navigate("/dashboard"), 500);
+        setToast({
+          message: res.data.message || "Signup failed",
+          type: "error",
+        });
       }
     } catch (error) {
-      setToast({ message: error.message || "Signup failed. Please try again.", type: "error" });
-    } finally {
-      setLoading(false);
+      console.error("Signup Error:", error);
+
+      setToast({
+        message: "Server error. Please try again.",
+        type: "error",
+      });
     }
   };
 
@@ -91,18 +95,19 @@ export default function Signup({ setUser }) {
           </select>
 
           <div className="auth-actions">
-            <button 
-              className="auth-button auth-primary" 
-              type="submit"
-              disabled={loading}
-            >
-              {loading ? "Creating Account..." : "Signup"}
+            <button className="auth-button auth-primary" type="submit">
+              Signup
             </button>
             <div className="muted">Already have an account? Login</div>
           </div>
         </form>
+
         <div className="toast-container">
-          <Toast message={toast?.message} type={toast?.type} onClose={() => setToast(null)} />
+          <Toast
+            message={toast?.message}
+            type={toast?.type}
+            onClose={() => setToast(null)}
+          />
         </div>
       </div>
     </div>
