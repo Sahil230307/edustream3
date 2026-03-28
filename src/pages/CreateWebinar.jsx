@@ -24,12 +24,6 @@ export default function CreateWebinar() {
   const [maxCapacity, setMaxCapacity] = useState("100");
   const [imageUrl, setImageUrl] = useState("");
 
-  useEffect(() => {
-    if (editId) {
-      fetchWebinar();
-    }
-  }, [editId]);
-
   const fetchWebinar = async () => {
     try {
       const res = await getWebinarById(editId);
@@ -52,6 +46,12 @@ export default function CreateWebinar() {
       alert("Failed to load webinar details");
     }
   };
+
+  useEffect(() => {
+    if (editId) {
+      fetchWebinar();
+    }
+  }, [editId]);
 
   const handleSave = async () => {
     if (!title || !speaker || !date || !description) {

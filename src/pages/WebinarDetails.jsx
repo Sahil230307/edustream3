@@ -14,6 +14,16 @@ export default function WebinarDetails({ user }) {
   const [imageError, setImageError] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
 
+  const fetchWebinarDetails = async () => {
+    try {
+      const res = await getWebinarById(id);
+      setWebinar(res.data);
+    } catch (error) {
+      console.error("Error fetching webinar details:", error);
+      setToast({ message: "Failed to load webinar details", type: "error" });
+    }
+  };
+
   // Load webinar details
   useEffect(() => {
     fetchWebinarDetails();
@@ -36,16 +46,6 @@ export default function WebinarDetails({ user }) {
       setIsRegistered(storedRegistered.includes(Number(id)));
     }
   }, [user?.id, id]);
-
-  const fetchWebinarDetails = async () => {
-    try {
-      const res = await getWebinarById(id);
-      setWebinar(res.data);
-    } catch (error) {
-      console.error("Error fetching webinar details:", error);
-      setToast({ message: "Failed to load webinar details", type: "error" });
-    }
-  };
 
   if (!webinar) {
     return (

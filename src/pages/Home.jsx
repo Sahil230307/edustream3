@@ -1,23 +1,54 @@
-import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { getAllWebinars } from "../services/api";
+import WebinarCard from "../components/WebinarCard";
+import Toast from "../components/Toast";
 import "./Home.css";
 
-export default function Home() {
+export default function Home({ user }) {
   const [webinars, setWebinars] = useState([]);
   const [search, setSearch] = useState("");
+  const [wishlist, setWishlist] = useState([]);
+  const [toast, setToast] = useState(null);
 
+  // Load webinars on component mount
   useEffect(() => {
+    const fetchWebinars = async () => {
+      try {
+        const res = await getAllWebinars();
+        setWebinars(res.data);
+      } catch (error) {
+        console.error("Error fetching webinars:", error);
+      }
+    };
     fetchWebinars();
   }, []);
 
-  const fetchWebinars = async () => {
-    try {
-      const res = await getAllWebinars();
-      setWebinars(res.data);
-    } catch (error) {
-      console.error("Error fetching webinars:", error);
+  // Load wishlist from localStorage
+  useEffect(() => {
+    if (user?.id) {
+      const stored = JSON.parse(localStorage.getItem(`wishlist_${user.id}`)) || [];
+      setWishlist(stored);
+    } else {
+      setWishlist([]);
     }
+  }, [user?.id]);
+
+  const handleWishlistToggle = (webinarId) => {
+    const updated = wishlist.includes(webinarId)
+      ? wishlist.filter((id) => id !== webinarId)
+      : [...wishlist, webinarId];
+
+    setWishlist(updated);
+    if (user?.id) {
+      localStorage.setItem(`wishlist_${user.id}`, JSON.stringify(updated));
+    }
+
+    const isAdded = !wishlist.includes(webinarId);
+    setToast({
+      message: isAdded ? "Added to wishlist! 🎉" : "Removed from wishlist",
+      type: "info",
+    });
   };
 
   const filteredWebinars = webinars?.filter((webinar) =>
@@ -26,6 +57,14 @@ export default function Home() {
 
   return (
     <div>
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
+
       {/* HERO SECTION */}
       <section className="hero">
         <div className="hero-inner">
@@ -60,19 +99,19 @@ export default function Home() {
       {/* WEBINAR PREVIEW SECTION */}
       <section className="webinar-preview">
         {filteredWebinars && filteredWebinars.length > 0 ? (
-          filteredWebinars.slice(0, 6).map((webinar) => (
-            <div key={webinar.id} className="webinar-card">
-              <h3>{webinar.title}</h3>
-              <p><strong>Date:</strong> {webinar.date}</p>
-              <p>{webinar.description?.substring(0, 80)}...</p>
-
-              <Link to={`/webinar/${webinar.id}`}>
-                <button className="secondary-btn">
-                  View Details
-                </button>
-              </Link>
+          <>
+            <div className="webinar-grid">
+              {filteredWebinars.slice(0, 6).map((webinar) => (
+                <WebinarCard
+                  key={webinar.id}
+                  webinar={webinar}
+                  user={user}
+                  wishlist={wishlist}
+                  onWishlistToggle={handleWishlistToggle}
+                />
+              ))}
             </div>
-          ))
+          </>
         ) : (
           <p className="no-data">
             No webinars found.

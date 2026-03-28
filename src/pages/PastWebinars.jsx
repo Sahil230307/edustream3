@@ -5,6 +5,7 @@ export default function PastWebinars() {
   const [pastWebinars, setPastWebinars] = useState([]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     const stored = JSON.parse(localStorage.getItem("webinars")) || [];
     const today = new Date().toISOString().split("T")[0];
 

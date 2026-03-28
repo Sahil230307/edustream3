@@ -9,11 +9,17 @@
   top: 0;
   z-index: 1000;
   transition: all 0.3s;
+  min-height: 60px;
+  gap: 20px;
 }
 
 body.dark-mode .navbar {
   background: #1a1a1a;
   border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+.logo-section {
+  flex-shrink: 0;
 }
 
 .logo {
@@ -23,6 +29,7 @@ body.dark-mode .navbar {
   cursor: pointer;
   transition: all 0.3s;
   margin: 0;
+  white-space: nowrap;
 }
 
 .logo:hover {
@@ -38,8 +45,9 @@ body.dark-mode .logo {
   display: flex;
   align-items: center;
   gap: 20px;
-  width: 100%;
-  margin: 0 20px;
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
 }
 
 .nav-left {
@@ -47,6 +55,7 @@ body.dark-mode .logo {
   align-items: center;
   gap: 15px;
   flex: 1;
+  min-width: 0;
 }
 
 .nav-link {
@@ -57,6 +66,7 @@ body.dark-mode .logo {
   font-weight: 600;
   text-decoration: none;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .nav-link:hover {
@@ -91,6 +101,7 @@ body.dark-mode .nav-link.active {
   font-weight: 600;
   transition: all 0.3s;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .login-btn {
@@ -127,6 +138,7 @@ body.dark-mode .nav-link.active {
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .dark-mode-btn:hover {
@@ -139,16 +151,16 @@ body.dark-mode .dark-mode-btn {
 }
 
 .user-section {
-  margin-left: auto;
   display: flex;
   align-items: center;
   gap: 15px;
+  flex-shrink: 0;
 }
 
 .user-menu {
   display: flex;
-  align-items: flex-end;
-  gap: 8px;
+  align-items: center;
+  gap: 12px;
   padding: 8px 12px;
   background: #f9f9f9;
   border-radius: 6px;

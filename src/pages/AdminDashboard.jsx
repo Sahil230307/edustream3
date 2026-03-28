@@ -15,12 +15,7 @@ export default function AdminDashboard() {
   const [desc, setDesc] = useState("");
   const [due, setDue] = useState("");
   const [submissionsCount, setSubmissionsCount] = useState(0);
-  const [registered, setRegistered] = useState([]);
   const [activeTab, setActiveTab] = useState("analytics");
-
-  useEffect(() => {
-    loadData();
-  }, []);
 
   const loadData = async () => {
     try {
@@ -45,12 +40,15 @@ export default function AdminDashboard() {
     }
 
     try {
-      const reg = JSON.parse(localStorage.getItem(REGISTERED_KEY) || "[]");
-      setRegistered(reg);
+      JSON.parse(localStorage.getItem(REGISTERED_KEY) || "[]");
     } catch (e) {
       console.error(e);
     }
   };
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   useEffect(() => {
     localStorage.setItem(ASSIGNMENTS_KEY, JSON.stringify(assignments));

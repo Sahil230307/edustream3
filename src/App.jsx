@@ -27,7 +27,9 @@ function App() {
   // Load user from localStorage
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem("user"));
-    if (storedUser) setUser(storedUser);
+    if (storedUser) {
+      setUser(storedUser);
+    }
   }, []);
 
   // Save dark mode
@@ -56,7 +58,7 @@ function App() {
           path="/"
           element={
             user && user.isLoggedIn ? (
-              <Home />
+              <Home user={user} />
             ) : (
               <AuthLanding setUser={setUser} />
             )

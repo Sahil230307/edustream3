@@ -1,57 +1,86 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import Toast from "../components/Toast";
+import { updateUserProfile, changePassword } from "../services/api";
 import "./UserProfile.css";
 
 export default function UserProfile({ user, setUser }) {
-  const navigate = useNavigate();
   const [editMode, setEditMode] = useState(false);
   const [toast, setToast] = useState(null);
-  
+
   const [formData, setFormData] = useState({
     name: user?.name || "",
     email: user?.email || "",
     phone: user?.phone || "",
     bio: user?.bio || "",
-    avatar: user?.avatar || "https://via.placeholder.com/150"
+    avatar:
+      user?.avatar ||
+      `https://ui-avatars.com/api/?name=${user?.name || "User"}&background=4f46e5&color=fff`,
   });
 
   const [passwordData, setPasswordData] = useState({
     currentPassword: "",
     newPassword: "",
-    confirmPassword: ""
+    confirmPassword: "",
   });
+
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        name: user?.name || "",
+        email: user?.email || "",
+        phone: user?.phone || "",
+        bio: user?.bio || "",
+        avatar:
+          user?.avatar ||
+          `https://ui-avatars.com/api/?name=${user?.name || "User"}&background=4f46e5&color=fff`,
+      });
+    }
+  }, [user]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSaveProfile = () => {
+  const handleSaveProfile = async () => {
     if (!formData.name.trim() || !formData.email.trim()) {
       setToast({ message: "Name and email are required", type: "error" });
       return;
     }
 
-    const updatedUser = { ...user, ...formData };
-    const users = JSON.parse(localStorage.getItem("users")) || [];
-    const updatedUsers = users.map(u => u.email === user.email ? { ...u, ...formData } : u);
-    
-    localStorage.setItem("users", JSON.stringify(updatedUsers));
-    localStorage.setItem("user", JSON.stringify(updatedUser));
-    setUser(updatedUser);
-    setEditMode(false);
-    setToast({ message: "Profile updated successfully!", type: "success" });
+    try {
+      const res = await updateUserProfile(user.id, formData);
+
+      const updatedUser = {
+        ...user,
+        ...res.data,
+        isLoggedIn: true,
+      };
+
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+      setUser(updatedUser);
+      setEditMode(false);
+
+      setToast({
+        message: "Profile updated successfully!",
+        type: "success",
+      });
+    } catch (error) {
+      console.error("Profile update failed:", error);
+      setToast({
+        message: "Failed to update profile",
+        type: "error",
+      });
+    }
   };
 
-  const handleChangePassword = () => {
-    if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
+  const handleChangePassword = async () => {
+    if (
+      !passwordData.currentPassword ||
+      !passwordData.newPassword ||
+      !passwordData.confirmPassword
+    ) {
       setToast({ message: "All password fields are required", type: "error" });
-      return;
-    }
-
-    if (passwordData.currentPassword !== user.password) {
-      setToast({ message: "Current password is incorrect", type: "error" });
       return;
     }
 
@@ -61,22 +90,36 @@ export default function UserProfile({ user, setUser }) {
     }
 
     if (passwordData.newPassword.length < 6) {
-      setToast({ message: "Password must be at least 6 characters", type: "error" });
+      setToast({
+        message: "Password must be at least 6 characters",
+        type: "error",
+      });
       return;
     }
 
-    const users = JSON.parse(localStorage.getItem("users")) || [];
-    const updatedUsers = users.map(u => 
-      u.email === user.email ? { ...u, password: passwordData.newPassword } : u
-    );
-    
-    localStorage.setItem("users", JSON.stringify(updatedUsers));
-    const updatedUser = { ...user, password: passwordData.newPassword };
-    localStorage.setItem("user", JSON.stringify(updatedUser));
-    setUser(updatedUser);
-    
-    setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
-    setToast({ message: "Password changed successfully!", type: "success" });
+    try {
+      await changePassword(user.id, {
+        currentPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword,
+      });
+
+      setPasswordData({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
+
+      setToast({
+        message: "Password changed successfully!",
+        type: "success",
+      });
+    } catch (error) {
+      console.error("Password change failed:", error);
+      setToast({
+        message: error?.response?.data || "Failed to change password",
+        type: "error",
+      });
+    }
   };
 
   return (
@@ -88,15 +131,18 @@ export default function UserProfile({ user, setUser }) {
         <h1>My Profile</h1>
       </div>
 
-      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
 
       <div className="profile-section">
         <div className="section-header">
           <h2>Personal Information</h2>
-          <button 
-            className="btn-edit"
-            onClick={() => setEditMode(!editMode)}
-          >
+          <button className="btn-edit" onClick={() => setEditMode(!editMode)}>
             {editMode ? "Cancel" : "Edit"}
           </button>
         </div>
@@ -123,7 +169,10 @@ export default function UserProfile({ user, setUser }) {
                   onChange={handleInputChange}
                   placeholder="Enter your email"
                   disabled
-                  style={{ backgroundColor: "#f0f0f0", cursor: "not-allowed" }}
+                  style={{
+                    backgroundColor: "#f0f0f0",
+                    cursor: "not-allowed",
+                  }}
                 />
               </div>
             </div>
@@ -196,7 +245,12 @@ export default function UserProfile({ user, setUser }) {
             <input
               type="password"
               value={passwordData.currentPassword}
-              onChange={(e) => setPasswordData({...passwordData, currentPassword: e.target.value})}
+              onChange={(e) =>
+                setPasswordData({
+                  ...passwordData,
+                  currentPassword: e.target.value,
+                })
+              }
               placeholder="Enter current password"
             />
           </div>
@@ -206,7 +260,12 @@ export default function UserProfile({ user, setUser }) {
             <input
               type="password"
               value={passwordData.newPassword}
-              onChange={(e) => setPasswordData({...passwordData, newPassword: e.target.value})}
+              onChange={(e) =>
+                setPasswordData({
+                  ...passwordData,
+                  newPassword: e.target.value,
+                })
+              }
               placeholder="Enter new password"
             />
           </div>
@@ -216,7 +275,12 @@ export default function UserProfile({ user, setUser }) {
             <input
               type="password"
               value={passwordData.confirmPassword}
-              onChange={(e) => setPasswordData({...passwordData, confirmPassword: e.target.value})}
+              onChange={(e) =>
+                setPasswordData({
+                  ...passwordData,
+                  confirmPassword: e.target.value,
+                })
+              }
               placeholder="Confirm new password"
             />
           </div>
@@ -231,7 +295,6 @@ export default function UserProfile({ user, setUser }) {
         <h2>Account Settings</h2>
         <div className="settings-info">
           <p><strong>Account Status:</strong> Active</p>
-          <p><strong>Member Since:</strong> {new Date().toLocaleDateString()}</p>
           <p><strong>Role:</strong> {user?.role === "admin" ? "Administrator" : "User"}</p>
         </div>
       </div>

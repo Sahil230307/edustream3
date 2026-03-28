@@ -15,6 +15,16 @@ export default function WebinarList({ user }) {
   const [toast, setToast] = useState(null);
   const [wishlist, setWishlist] = useState([]);
 
+  const loadWebinars = async () => {
+    try {
+      const res = await getAllWebinars();
+      setWebinars(res.data);
+    } catch (error) {
+      console.error("Failed to load webinars:", error);
+      setToast({ message: "Failed to load webinars", type: "error" });
+    }
+  };
+
   useEffect(() => {
     loadWebinars();
   }, []);
@@ -28,16 +38,6 @@ export default function WebinarList({ user }) {
       setWishlist([]);
     }
   }, [user?.id]);
-
-  const loadWebinars = async () => {
-    try {
-      const res = await getAllWebinars();
-      setWebinars(res.data);
-    } catch (error) {
-      console.error("Failed to load webinars:", error);
-      setToast({ message: "Failed to load webinars", type: "error" });
-    }
-  };
 
   // Get unique categories and difficulties
   const categories = ["All", ...new Set(webinars.map((w) => w.category || "Other"))];

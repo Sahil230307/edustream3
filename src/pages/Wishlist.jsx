@@ -9,10 +9,6 @@ export default function Wishlist({ user }) {
   const [webinars, setWebinars] = useState([]);
   const [toast, setToast] = useState(null);
 
-  useEffect(() => {
-    loadWishlistData();
-  }, [user?.id]);
-
   const loadWishlistData = async () => {
     try {
       const storedWishlist =
@@ -27,6 +23,10 @@ export default function Wishlist({ user }) {
       setToast({ message: "Failed to load wishlist", type: "error" });
     }
   };
+
+  useEffect(() => {
+    loadWishlistData();
+  }, [user?.id]);
 
   const wishlistWebinars = webinars.filter((w) => wishlist.includes(Number(w.id)));
 

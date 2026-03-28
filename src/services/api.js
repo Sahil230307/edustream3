@@ -14,8 +14,18 @@ export const updateWebinar = (id, data) => axios.put(`${API}/webinars/${id}`, da
 export const deleteWebinar = (id) => axios.delete(`${API}/webinars/${id}`);
 
 // REGISTRATION APIs
+
+export const updateUserProfile = (id, userData) =>
+  axios.put(`${API}/users/${id}`, userData);
+
+export const changePassword = (id, passwordData) =>
+  axios.put(`${API}/users/${id}/change-password`, passwordData);
+
 export const registerForWebinar = (userId, webinarId) =>
   axios.post(`${API}/registrations/${userId}/${webinarId}`);
 
 export const getUserRegisteredWebinars = (userId) =>
+  axios.get(`${API}/registrations/user/${userId}`);
+
+export const getRegistrationsByUser = (userId) =>
   axios.get(`${API}/registrations/user/${userId}`);

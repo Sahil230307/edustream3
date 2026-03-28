@@ -4,7 +4,7 @@ import PasswordInput from "../components/PasswordInput";
 import Toast from "../components/Toast";
 import { registerUser } from "../services/api";
 
-export default function Signup({ setUser }) {
+export default function Signup() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
