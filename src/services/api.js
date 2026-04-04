@@ -2,30 +2,51 @@ import axios from "axios";
 
 const API = "http://localhost:8080/api";
 
+const api = axios.create({
+  baseURL: API,
+  headers: {
+    "Content-Type": "application/json",
+  },
+  timeout: 10000,
+});
+
+// =========================
 // AUTH APIs
-export const registerUser = (data) => axios.post(`${API}/auth/register`, data);
-export const loginUser = (data) => axios.post(`${API}/auth/login`, data);
+// =========================
+export const registerUser = (data) => api.post("/auth/register", data);
+export const loginUser = (data) => api.post("/auth/login", data);
 
+// =========================
 // WEBINAR APIs
-export const getAllWebinars = () => axios.get(`${API}/webinars`);
-export const getWebinarById = (id) => axios.get(`${API}/webinars/${id}`);
-export const createWebinar = (data) => axios.post(`${API}/webinars`, data);
-export const updateWebinar = (id, data) => axios.put(`${API}/webinars/${id}`, data);
-export const deleteWebinar = (id) => axios.delete(`${API}/webinars/${id}`);
+// =========================
+export const getAllWebinars = () => api.get("/webinars");
+export const getWebinarById = (id) => api.get(`/webinars/${id}`);
+export const createWebinar = (data) => api.post("/webinars", data);
+export const updateWebinar = (id, data) => api.put(`/webinars/${id}`, data);
+export const deleteWebinar = (id) => api.delete(`/webinars/${id}`);
 
-// REGISTRATION APIs
-
+// =========================
+// USER APIs
+// =========================
 export const updateUserProfile = (id, userData) =>
-  axios.put(`${API}/users/${id}`, userData);
+  api.put(`/users/${id}`, userData);
 
 export const changePassword = (id, passwordData) =>
-  axios.put(`${API}/users/${id}/change-password`, passwordData);
+  api.put(`/users/${id}/change-password`, passwordData);
 
+// =========================
+// REGISTRATION APIs
+// =========================
 export const registerForWebinar = (userId, webinarId) =>
-  axios.post(`${API}/registrations/${userId}/${webinarId}`);
+  api.post(`/registrations/${userId}/${webinarId}`);
 
 export const getUserRegisteredWebinars = (userId) =>
-  axios.get(`${API}/registrations/user/${userId}`);
+  api.get(`/registrations/user/${userId}`);
 
 export const getRegistrationsByUser = (userId) =>
-  axios.get(`${API}/registrations/user/${userId}`);
+  api.get(`/registrations/user/${userId}`);
+
+// =========================
+// OPTIONAL: export instance
+// =========================
+export default api;

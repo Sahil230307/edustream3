@@ -7,17 +7,19 @@ import { loginUser } from "../services/api";
 export default function Login({ setUser }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("user"); // kept only for UI consistency
+  const [role, setRole] = useState("USER");
   const [toast, setToast] = useState(null);
   const navigate = useNavigate();
 
-  // Auto-login if already stored
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem("user"));
     if (storedUser && storedUser.isLoggedIn) {
       setUser(storedUser);
-      if (storedUser.role?.toLowerCase() === "admin") navigate("/admin");
-      else navigate("/dashboard");
+      if (storedUser.role?.toUpperCase() === "ADMIN") {
+        navigate("/admin");
+      } else {
+        navigate("/dashboard");
+      }
     }
   }, [navigate, setUser]);
 
@@ -36,12 +38,24 @@ export default function Login({ setUser }) {
       const res = await loginUser({
         email,
         password,
+        role,
       });
 
-      // Backend returns user object if login successful
       if (res.data && res.data.id) {
+        const backendRole = res.data.role?.toUpperCase();
+        const selectedRole = role.toUpperCase();
+
+        if (backendRole !== selectedRole) {
+          setToast({
+            message: `This account is registered as ${backendRole}, not ${selectedRole}`,
+            type: "error",
+          });
+          return;
+        }
+
         const session = {
           ...res.data,
+          role: backendRole,
           isLoggedIn: true,
         };
 
@@ -51,7 +65,7 @@ export default function Login({ setUser }) {
         setToast({ message: "Login successful!", type: "success" });
 
         setTimeout(() => {
-          if (session.role?.toLowerCase() === "admin") {
+          if (session.role === "ADMIN") {
             navigate("/admin");
           } else {
             navigate("/dashboard");
@@ -96,14 +110,13 @@ export default function Login({ setUser }) {
             onChange={(e) => setPassword(e.target.value)}
           />
 
-          {/* Optional: kept only because your UI already has it */}
           <select
             className="auth-select"
             value={role}
             onChange={(e) => setRole(e.target.value)}
           >
-            <option value="user">User</option>
-            <option value="admin">Admin</option>
+            <option value="USER">User</option>
+            <option value="ADMIN">Admin</option>
           </select>
 
           <div className="auth-actions">
@@ -116,11 +129,13 @@ export default function Login({ setUser }) {
       </div>
 
       <div className="toast-container">
-        <Toast
-          message={toast?.message}
-          type={toast?.type}
-          onClose={() => setToast(null)}
-        />
+        {toast && (
+          <Toast
+            message={toast.message}
+            type={toast.type}
+            onClose={() => setToast(null)}
+          />
+        )}
       </div>
     </div>
   );

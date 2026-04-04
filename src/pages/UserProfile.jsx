@@ -295,7 +295,7 @@ export default function UserProfile({ user, setUser }) {
         <h2>Account Settings</h2>
         <div className="settings-info">
           <p><strong>Account Status:</strong> Active</p>
-          <p><strong>Role:</strong> {user?.role === "admin" ? "Administrator" : "User"}</p>
+          <p><strong>Role:</strong> {user?.role?.toUpperCase() === "ADMIN" ? "Administrator" : "User"}</p>
         </div>
       </div>
     </div>

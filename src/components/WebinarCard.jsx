@@ -23,21 +23,26 @@ export default function WebinarCard({
     }
   };
 
+  const fallbackImage =
+    "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&h=200&fit=crop";
+
   return (
     <div className="webinar-card">
       <div className="card-image">
         <img
-          src={
-            webinar.imageUrl ||
-            "https://via.placeholder.com/400x200?text=Webinar"
-          }
-          alt={webinar.title}
+          src={webinar.imageUrl?.trim() ? webinar.imageUrl : fallbackImage}
+          alt={webinar.title || "Webinar"}
+          onError={(e) => {
+            e.target.onerror = null;
+            e.target.src = fallbackImage;
+          }}
         />
 
         <div className="card-badges">
           <span className="category-badge">
             {webinar.category || "Other"}
           </span>
+
           {webinar.difficulty && (
             <span className="difficulty-badge">
               {webinar.difficulty}
@@ -49,9 +54,7 @@ export default function WebinarCard({
           <button
             className={`wishlist-btn ${isInWishlist ? "active" : ""}`}
             onClick={handleWishlistClick}
-            title={
-              isInWishlist ? "Remove from wishlist" : "Add to wishlist"
-            }
+            title={isInWishlist ? "Remove from wishlist" : "Add to wishlist"}
           >
             {isInWishlist ? "❤️" : "🤍"}
           </button>
@@ -71,7 +74,9 @@ export default function WebinarCard({
 
         {webinar.description && (
           <p className="card-description">
-            {webinar.description.substring(0, 100)}...
+            {webinar.description.length > 100
+              ? webinar.description.substring(0, 100) + "..."
+              : webinar.description}
           </p>
         )}
 

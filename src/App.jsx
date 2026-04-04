@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 
 import Navbar from "./components/Navbar";
@@ -8,7 +8,7 @@ import Home from "./pages/Home";
 import WebinarList from "./pages/WebinarList";
 import WebinarDetails from "./pages/WebinarDetails";
 import Dashboard from "./pages/Dashboard";
-import AdminDashboard from "./pages/AdminDashboard.jsx";
+import AdminDashboard from "./pages/AdminDashboard";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import AuthLanding from "./pages/AuthLanding";
@@ -24,15 +24,18 @@ function App() {
     return JSON.parse(localStorage.getItem("darkMode")) || false;
   });
 
-  // Load user from localStorage
+  // Load user from localStorage on refresh
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem("user"));
-    if (storedUser) {
-      setUser(storedUser);
+    if (storedUser && storedUser.isLoggedIn) {
+      setUser({
+        ...storedUser,
+        role: storedUser.role?.toUpperCase(),
+      });
     }
   }, []);
 
-  // Save dark mode
+  // Save dark mode preference
   useEffect(() => {
     localStorage.setItem("darkMode", JSON.stringify(darkMode));
 
@@ -68,61 +71,52 @@ function App() {
         <Route path="/login" element={<Login setUser={setUser} />} />
         <Route path="/signup" element={<Signup setUser={setUser} />} />
 
-        <Route
-          path="/webinars"
-          element={<WebinarList user={user} />}
-        />
+        <Route path="/webinars" element={<WebinarList user={user} />} />
+        <Route path="/webinar/:id" element={<WebinarDetails user={user} />} />
+        <Route path="/past-webinars" element={<PastWebinars user={user} />} />
 
-        <Route
-          path="/webinar/:id"
-          element={<WebinarDetails user={user} />}
-        />
-
-        {/* User Dashboard */}
+        {/* USER ROUTES */}
         <Route
           path="/dashboard"
           element={
-            <ProtectedRoute user={user} role="user">
+            <ProtectedRoute user={user} role="USER">
               <Dashboard user={user} />
             </ProtectedRoute>
           }
         />
 
-        {/* User Profile */}
         <Route
           path="/profile"
           element={
-            <ProtectedRoute user={user} role="user">
+            <ProtectedRoute user={user} role="USER">
               <UserProfile user={user} setUser={setUser} />
             </ProtectedRoute>
           }
         />
 
-        {/* Wishlist */}
         <Route
           path="/wishlist"
           element={
-            <ProtectedRoute user={user} role="user">
+            <ProtectedRoute user={user} role="USER">
               <Wishlist user={user} />
             </ProtectedRoute>
           }
         />
 
-        {/* Submission Page (user only) */}
         <Route
           path="/submission"
           element={
-            <ProtectedRoute user={user} role="user">
+            <ProtectedRoute user={user} role="USER">
               <Submission />
             </ProtectedRoute>
           }
         />
 
-        {/* Admin Dashboard */}
+        {/* ADMIN ROUTES */}
         <Route
           path="/admin"
           element={
-            <ProtectedRoute user={user} role="admin">
+            <ProtectedRoute user={user} role="ADMIN">
               <AdminDashboard />
             </ProtectedRoute>
           }
@@ -131,7 +125,7 @@ function App() {
         <Route
           path="/admin/create"
           element={
-            <ProtectedRoute user={user} role="admin">
+            <ProtectedRoute user={user} role="ADMIN">
               <CreateWebinar />
             </ProtectedRoute>
           }
@@ -140,14 +134,14 @@ function App() {
         <Route
           path="/admin/edit/:id"
           element={
-            <ProtectedRoute user={user} role="admin">
+            <ProtectedRoute user={user} role="ADMIN">
               <CreateWebinar />
             </ProtectedRoute>
           }
         />
 
-        {/* Past Webinars Page */}
-        <Route path="/past-webinars" element={<PastWebinars />} />
+        {/* Fallback Route */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   );

@@ -3,11 +3,12 @@ import "./Navbar.css";
 
 export default function Navbar({ user, setUser, darkMode, setDarkMode }) {
   const navigate = useNavigate();
+  const userRole = user?.role?.toUpperCase();
 
   const handleLogout = () => {
     localStorage.removeItem("user");
     setUser(null);
-    navigate("/");
+    navigate("/login");
   };
 
   return (
@@ -15,7 +16,7 @@ export default function Navbar({ user, setUser, darkMode, setDarkMode }) {
       <div className="logo-section">
         <h1
           className="logo"
-          onClick={() => navigate("/")}
+          onClick={() => navigate(userRole === "ADMIN" ? "/admin" : "/")}
           style={{ cursor: "pointer" }}
         >
           🎓 EduStream
@@ -25,75 +26,95 @@ export default function Navbar({ user, setUser, darkMode, setDarkMode }) {
       <div className="nav-links">
         {user?.isLoggedIn ? (
           <div className="nav-left">
-            <NavLink
-              to="/"
-              className={({ isActive }) =>
-                "nav-link" + (isActive ? " active" : "")
-              }
-            >
-              Home
-            </NavLink>
+            {/* USER NAVBAR */}
+            {userRole === "USER" && (
+              <>
+                <NavLink
+                  to="/"
+                  className={({ isActive }) =>
+                    "nav-link" + (isActive ? " active" : "")
+                  }
+                >
+                  Home
+                </NavLink>
 
-            <NavLink
-              to="/webinars"
-              className={({ isActive }) =>
-                "nav-link" + (isActive ? " active" : "")
-              }
-            >
-              Webinars
-            </NavLink>
+                <NavLink
+                  to="/webinars"
+                  className={({ isActive }) =>
+                    "nav-link" + (isActive ? " active" : "")
+                  }
+                >
+                  Webinars
+                </NavLink>
 
-            <NavLink
-              to="/past-webinars"
-              className={({ isActive }) =>
-                "nav-link" + (isActive ? " active" : "")
-              }
-            >
-              Past Webinars
-            </NavLink>
+                <NavLink
+                  to="/past-webinars"
+                  className={({ isActive }) =>
+                    "nav-link" + (isActive ? " active" : "")
+                  }
+                >
+                  Past Webinars
+                </NavLink>
 
-            {user.role === "user" && (
-              <NavLink
-                to="/dashboard"
-                className={({ isActive }) =>
-                  "nav-link" + (isActive ? " active" : "")
-                }
-              >
-                My Dashboard
-              </NavLink>
+                <NavLink
+                  to="/dashboard"
+                  className={({ isActive }) =>
+                    "nav-link" + (isActive ? " active" : "")
+                  }
+                >
+                  My Dashboard
+                </NavLink>
+
+                <NavLink
+                  to="/wishlist"
+                  className={({ isActive }) =>
+                    "nav-link" + (isActive ? " active" : "")
+                  }
+                >
+                  ❤️ Wishlist
+                </NavLink>
+
+                <NavLink
+                  to="/profile"
+                  className={({ isActive }) =>
+                    "nav-link" + (isActive ? " active" : "")
+                  }
+                >
+                  👤 Profile
+                </NavLink>
+              </>
             )}
 
-            {user.role === "user" && (
-              <NavLink
-                to="/wishlist"
-                className={({ isActive }) =>
-                  "nav-link" + (isActive ? " active" : "")
-                }
-              >
-                ❤️ Wishlist
-              </NavLink>
-            )}
+            {/* ADMIN NAVBAR */}
+            {userRole === "ADMIN" && (
+              <>
+                <NavLink
+                  to="/admin"
+                  className={({ isActive }) =>
+                    "nav-link" + (isActive ? " active" : "")
+                  }
+                >
+                  Admin Dashboard
+                </NavLink>
 
-            {user.role === "user" && (
-              <NavLink
-                to="/profile"
-                className={({ isActive }) =>
-                  "nav-link" + (isActive ? " active" : "")
-                }
-              >
-                👤 Profile
-              </NavLink>
-            )}
+                <NavLink
+                  to="/admin/create"
+                  className={({ isActive }) =>
+                    "nav-link" + (isActive ? " active" : "")
+                  }
+                >
+                  + Create Webinar
+                </NavLink>
 
-            {user.role === "admin" && (
-              <NavLink
-                to="/admin"
-                className={({ isActive }) =>
-                  "nav-link" + (isActive ? " active" : "")
-                }
-              >
-                Admin Panel
-              </NavLink>
+                <NavLink
+                  to="/webinars"
+                  className={({ isActive }) =>
+                    "nav-link" + (isActive ? " active" : "")
+                  }
+                >
+                  View Webinars
+                </NavLink>
+              </>
             )}
           </div>
         ) : (
@@ -129,7 +150,7 @@ export default function Navbar({ user, setUser, darkMode, setDarkMode }) {
 
           <div className="user-menu">
             <div className="user-email">{user.email}</div>
-            <div className="user-role">{user.role}</div>
+            <div className="user-role">{userRole}</div>
             <button onClick={handleLogout} className="logout-btn">
               Logout
             </button>

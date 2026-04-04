@@ -8,7 +8,7 @@ export default function Signup() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("user");
+  const [role, setRole] = useState("USER");
   const [toast, setToast] = useState(null);
   const navigate = useNavigate();
 
@@ -25,12 +25,12 @@ export default function Signup() {
         name,
         email,
         password,
-        role: role.toUpperCase(), // backend expects USER / ADMIN
+        role,
       });
 
       if (res.data.message === "User registered successfully") {
         setToast({
-          message: "Account created successfully — please login.",
+          message: `Account created successfully as ${role}. Please login.`,
           type: "success",
         });
 
@@ -43,7 +43,6 @@ export default function Signup() {
       }
     } catch (error) {
       console.error("Signup Error:", error);
-
       setToast({
         message: "Server error. Please try again.",
         type: "error",
@@ -90,8 +89,8 @@ export default function Signup() {
             value={role}
             onChange={(e) => setRole(e.target.value)}
           >
-            <option value="user">User</option>
-            <option value="admin">Admin</option>
+            <option value="USER">User</option>
+            <option value="ADMIN">Admin</option>
           </select>
 
           <div className="auth-actions">
@@ -103,11 +102,13 @@ export default function Signup() {
         </form>
 
         <div className="toast-container">
-          <Toast
-            message={toast?.message}
-            type={toast?.type}
-            onClose={() => setToast(null)}
-          />
+          {toast && (
+            <Toast
+              message={toast.message}
+              type={toast.type}
+              onClose={() => setToast(null)}
+            />
+          )}
         </div>
       </div>
     </div>

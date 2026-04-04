@@ -11,8 +11,10 @@ export default function WebinarDetails({ user }) {
   const [webinar, setWebinar] = useState(null);
   const [toast, setToast] = useState(null);
   const [wishlist, setWishlist] = useState([]);
-  const [imageError, setImageError] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
+
+  const fallbackImage =
+    "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&h=400&fit=crop";
 
   const fetchWebinarDetails = async () => {
     try {
@@ -32,17 +34,19 @@ export default function WebinarDetails({ user }) {
   // Load wishlist when user changes
   useEffect(() => {
     if (user?.id) {
-      const stored = JSON.parse(localStorage.getItem(`wishlist_${user.id}`)) || [];
+      const stored =
+        JSON.parse(localStorage.getItem(`wishlist_${user.id}`)) || [];
       setWishlist(stored);
     } else {
       setWishlist([]);
     }
   }, [user?.id]);
 
-  // Check if already registered (frontend-side quick check)
+  // Check if already registered
   useEffect(() => {
     if (user?.id) {
-      const storedRegistered = JSON.parse(localStorage.getItem(`registered_${user.id}`)) || [];
+      const storedRegistered =
+        JSON.parse(localStorage.getItem(`registered_${user.id}`)) || [];
       setIsRegistered(storedRegistered.includes(Number(id)));
     }
   }, [user?.id, id]);
@@ -60,7 +64,7 @@ export default function WebinarDetails({ user }) {
 
   const isWishlisted = wishlist.includes(Number(webinar.id));
 
-  // Safe fallback values (until backend stores these properly)
+  // Safe fallback values
   const category = webinar.category || "General";
   const difficulty = webinar.difficulty || "Beginner";
   const speakerEmail = webinar.speakerEmail || "Not provided";
@@ -89,8 +93,8 @@ export default function WebinarDetails({ user }) {
       if (res.data.message === "Registration successful") {
         setToast({ message: "Successfully registered! 🎉", type: "success" });
 
-        // local tracking for frontend button state
-        const storedRegistered = JSON.parse(localStorage.getItem(`registered_${user.id}`)) || [];
+        const storedRegistered =
+          JSON.parse(localStorage.getItem(`registered_${user.id}`)) || [];
         const updated = [...storedRegistered, Number(webinar.id)];
         localStorage.setItem(`registered_${user.id}`, JSON.stringify(updated));
         setIsRegistered(true);
@@ -137,30 +141,15 @@ export default function WebinarDetails({ user }) {
 
       <div className="details-header">
         <div className="header-image">
-          {!imageError ? (
-            <img
-              src={webinar.imageUrl || "https://via.placeholder.com/800x400?text=Webinar"}
-              alt={webinar.title}
-              onError={() => setImageError(true)}
-            />
-          ) : (
-            <div
-              className="image-fallback"
-              style={{
-                width: "100%",
-                height: "100%",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                backgroundColor: "#f0f0f0",
-                fontSize: "24px",
-                fontWeight: "bold",
-                color: "#666",
-              }}
-            >
-              {webinar.title}
-            </div>
-          )}
+          <img
+            src={webinar.imageUrl?.trim() ? webinar.imageUrl : fallbackImage}
+            alt={webinar.title || "Webinar"}
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = fallbackImage;
+            }}
+          />
+
           <div className="header-overlay">
             <span className="category-label">{category}</span>
             <span className="difficulty-label">{difficulty}</span>
@@ -195,7 +184,9 @@ export default function WebinarDetails({ user }) {
             </div>
             <div className="meta-item">
               <span className="meta-label">👥 Capacity</span>
-              <span className="meta-value">{registeredCount}/{maxCapacity}</span>
+              <span className="meta-value">
+                {registeredCount}/{maxCapacity}
+              </span>
             </div>
           </div>
 
@@ -305,7 +296,9 @@ export default function WebinarDetails({ user }) {
               <span className="label">Status</span>
               <span
                 className="value"
-                style={{ color: registeredCount >= maxCapacity ? "#e74c3c" : "#27ae60" }}
+                style={{
+                  color: registeredCount >= maxCapacity ? "#e74c3c" : "#27ae60",
+                }}
               >
                 {registeredCount >= maxCapacity ? "Full" : "Open"}
               </span>

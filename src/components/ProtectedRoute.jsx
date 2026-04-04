@@ -1,18 +1,20 @@
 import { Navigate } from "react-router-dom";
 
 export default function ProtectedRoute({ user, children, role }) {
-  // If not logged in, redirect to landing
-  if (!user || !user.isLoggedIn) return <Navigate to="/" />;
+  if (!user || !user.isLoggedIn) {
+    return <Navigate to="/login" replace />;
+  }
 
-  // If a role is specified, enforce it.
-  // Allow admins to access user pages (i.e., role 'user').
-  if (role) {
-    if (role === "user") {
-      if (user.role !== "user" && user.role !== "admin") {
-        return <Navigate to="/" />;
-      }
+  const userRole = user?.role?.toUpperCase();
+  const requiredRole = role?.toUpperCase();
+
+  // Strict role checking
+  if (requiredRole && userRole !== requiredRole) {
+    // Redirect based on actual logged-in role
+    if (userRole === "ADMIN") {
+      return <Navigate to="/admin" replace />;
     } else {
-      if (user.role !== role) return <Navigate to="/" />;
+      return <Navigate to="/dashboard" replace />;
     }
   }
 
