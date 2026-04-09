@@ -20,6 +20,19 @@ export default function Signup() {
       return;
     }
 
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setToast({ message: "Please enter a valid email", type: "error" });
+      return;
+    }
+
+    // Password length validation
+    if (password.length < 6) {
+      setToast({ message: "Password must be at least 6 characters", type: "error" });
+      return;
+    }
+
     try {
       const res = await registerUser({
         name,
@@ -43,10 +56,17 @@ export default function Signup() {
       }
     } catch (error) {
       console.error("Signup Error:", error);
-      setToast({
-        message: "Server error. Please try again.",
-        type: "error",
-      });
+      let errorMessage = "Server error. Please try again.";
+      
+      if (error.response?.status === 400) {
+        errorMessage = error.response.data?.message || "Invalid input provided";
+      } else if (error.response?.status === 409) {
+        errorMessage = "Email already registered";
+      } else if (error.message === "Network Error") {
+        errorMessage = "Cannot connect to server";
+      }
+      
+      setToast({ message: errorMessage, type: "error" });
     }
   };
 

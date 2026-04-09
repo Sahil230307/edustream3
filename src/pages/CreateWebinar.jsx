@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import Toast from "../components/Toast";
 import {
   createWebinar,
   getWebinarById,
@@ -13,6 +14,8 @@ export default function CreateWebinar() {
 
   const editId = id ? Number(id) : null;
 
+  const [activeTab, setActiveTab] = useState("basic");
+
   const [title, setTitle] = useState("");
   const [speaker, setSpeaker] = useState("");
   const [speakerEmail, setSpeakerEmail] = useState("");
@@ -23,6 +26,13 @@ export default function CreateWebinar() {
   const [difficulty, setDifficulty] = useState("Beginner");
   const [maxCapacity, setMaxCapacity] = useState("100");
   const [imageUrl, setImageUrl] = useState("");
+  const [toast, setToast] = useState(null);
+
+  // Refs for focusing fields
+  const titleRef = useRef(null);
+  const speakerRef = useRef(null);
+  const dateRef = useRef(null);
+  const descriptionRef = useRef(null);
 
   const fetchWebinar = async () => {
     try {
@@ -43,7 +53,15 @@ export default function CreateWebinar() {
       }
     } catch (error) {
       console.error("Error fetching webinar:", error);
-      alert("Failed to load webinar details");
+      let errorMessage = "Failed to load webinar details";
+      
+      if (error.response?.status === 404) {
+        errorMessage = "Webinar not found";
+      } else if (error.response?.status === 403) {
+        errorMessage = "You don't have permission to edit this webinar";
+      }
+      
+      setToast({ message: errorMessage, type: "error" });
     }
   };
 
@@ -54,8 +72,31 @@ export default function CreateWebinar() {
   }, [editId]);
 
   const handleSave = async () => {
-    if (!title || !speaker || !date || !description) {
-      alert("Please fill all required fields");
+    if (!title.trim()) {
+      setToast({ message: "Please enter webinar title", type: "error" });
+      setActiveTab("basic");
+      titleRef.current?.focus();
+      return;
+    }
+
+    if (!speaker.trim()) {
+      setToast({ message: "Please enter speaker name", type: "error" });
+      setActiveTab("basic");
+      speakerRef.current?.focus();
+      return;
+    }
+
+    if (!date) {
+      setToast({ message: "Please select a date", type: "error" });
+      setActiveTab("basic");
+      dateRef.current?.focus();
+      return;
+    }
+
+    if (!description.trim()) {
+      setToast({ message: "Please enter description", type: "error" });
+      setActiveTab("details");
+      descriptionRef.current?.focus();
       return;
     }
 
@@ -77,16 +118,24 @@ export default function CreateWebinar() {
     try {
       if (editId) {
         await updateWebinar(editId, webinarData);
-        alert("Webinar updated successfully");
+        setToast({ message: "Webinar updated successfully", type: "success" });
       } else {
         await createWebinar(webinarData);
-        alert("Webinar created successfully");
+        setToast({ message: "Webinar created successfully", type: "success" });
       }
 
-      navigate("/admin");
+      setTimeout(() => navigate("/admin"), 800);
     } catch (error) {
       console.error("Error saving webinar:", error);
-      alert("Failed to save webinar");
+      let errorMessage = "Failed to save webinar";
+      
+      if (error.response?.status === 400) {
+        errorMessage = error.response.data?.message || "Invalid webinar data";
+      } else if (error.response?.status === 403) {
+        errorMessage = "You don't have permission to perform this action";
+      }
+      
+      setToast({ message: errorMessage, type: "error" });
     }
   };
 
@@ -96,11 +145,19 @@ export default function CreateWebinar() {
 
     try {
       await deleteWebinar(editId);
-      alert("Webinar deleted successfully");
-      navigate("/admin");
+      setToast({ message: "Webinar deleted successfully", type: "success" });
+      setTimeout(() => navigate("/admin"), 800);
     } catch (error) {
       console.error("Error deleting webinar:", error);
-      alert("Failed to delete webinar");
+      let errorMessage = "Failed to delete webinar";
+      
+      if (error.response?.status === 403) {
+        errorMessage = "You don't have permission to delete this webinar";
+      } else if (error.response?.status === 404) {
+        errorMessage = "Webinar not found";
+      }
+      
+      setToast({ message: errorMessage, type: "error" });
     }
   };
 
@@ -118,89 +175,140 @@ export default function CreateWebinar() {
           boxShadow: "0 6px 18px rgba(0,0,0,0.08)",
         }}
       >
-        <input
-          type="text"
-          placeholder="Webinar Title *"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          style={inputStyle}
-        />
+        {/* Tab Navigation */}
+        <div style={{ display: "flex", marginBottom: "20px", borderBottom: "1px solid #e5e7eb" }}>
+          <button
+            onClick={() => setActiveTab("basic")}
+            style={{
+              ...tabStyle,
+              backgroundColor: activeTab === "basic" ? "#f3f4f6" : "transparent",
+              borderBottom: activeTab === "basic" ? "2px solid #4f46e5" : "none",
+            }}
+          >
+            Basic Info
+          </button>
+          <button
+            onClick={() => setActiveTab("details")}
+            style={{
+              ...tabStyle,
+              backgroundColor: activeTab === "details" ? "#f3f4f6" : "transparent",
+              borderBottom: activeTab === "details" ? "2px solid #4f46e5" : "none",
+            }}
+          >
+            Details
+          </button>
+          <button
+            onClick={() => setActiveTab("settings")}
+            style={{
+              ...tabStyle,
+              backgroundColor: activeTab === "settings" ? "#f3f4f6" : "transparent",
+              borderBottom: activeTab === "settings" ? "2px solid #4f46e5" : "none",
+            }}
+          >
+            Settings
+          </button>
+        </div>
 
-        <input
-          type="text"
-          placeholder="Speaker Name *"
-          value={speaker}
-          onChange={(e) => setSpeaker(e.target.value)}
-          style={inputStyle}
-        />
+        {/* Tab Content */}
+        {activeTab === "basic" && (
+          <div>
+            <input
+              ref={titleRef}
+              type="text"
+              placeholder="Webinar Title *"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              style={inputStyle}
+            />
 
-        <input
-          type="email"
-          placeholder="Speaker Email"
-          value={speakerEmail}
-          onChange={(e) => setSpeakerEmail(e.target.value)}
-          style={inputStyle}
-        />
+            <input
+              ref={speakerRef}
+              type="text"
+              placeholder="Speaker Name *"
+              value={speaker}
+              onChange={(e) => setSpeaker(e.target.value)}
+              style={inputStyle}
+            />
 
-        <input
-          type="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-          style={inputStyle}
-        />
+            <input
+              type="email"
+              placeholder="Speaker Email"
+              value={speakerEmail}
+              onChange={(e) => setSpeakerEmail(e.target.value)}
+              style={inputStyle}
+            />
 
-        <input
-          type="time"
-          placeholder="Time"
-          value={time}
-          onChange={(e) => setTime(e.target.value)}
-          style={inputStyle}
-        />
+            <input
+              ref={dateRef}
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              style={inputStyle}
+            />
 
-        <select
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
-          style={inputStyle}
-        >
-          <option value="Web Development">Web Development</option>
-          <option value="Cloud">Cloud</option>
-          <option value="AI/ML">AI/ML</option>
-          <option value="Design">Design</option>
-          <option value="Other">Other</option>
-        </select>
+            <input
+              type="time"
+              placeholder="Time"
+              value={time}
+              onChange={(e) => setTime(e.target.value)}
+              style={inputStyle}
+            />
+          </div>
+        )}
 
-        <select
-          value={difficulty}
-          onChange={(e) => setDifficulty(e.target.value)}
-          style={inputStyle}
-        >
-          <option value="Beginner">Beginner</option>
-          <option value="Intermediate">Intermediate</option>
-          <option value="Advanced">Advanced</option>
-        </select>
+        {activeTab === "details" && (
+          <div>
+            <textarea
+              ref={descriptionRef}
+              placeholder="Webinar Description *"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              style={{ ...inputStyle, height: "100px" }}
+            />
 
-        <input
-          type="number"
-          placeholder="Max Capacity"
-          value={maxCapacity}
-          onChange={(e) => setMaxCapacity(e.target.value)}
-          style={inputStyle}
-        />
+            <select
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              style={inputStyle}
+            >
+              <option value="Web Development">Web Development</option>
+              <option value="Cloud">Cloud</option>
+              <option value="AI/ML">AI/ML</option>
+              <option value="Design">Design</option>
+              <option value="Other">Other</option>
+            </select>
 
-        <input
-          type="url"
-          placeholder="Image URL"
-          value={imageUrl}
-          onChange={(e) => setImageUrl(e.target.value)}
-          style={inputStyle}
-        />
+            <select
+              value={difficulty}
+              onChange={(e) => setDifficulty(e.target.value)}
+              style={inputStyle}
+            >
+              <option value="Beginner">Beginner</option>
+              <option value="Intermediate">Intermediate</option>
+              <option value="Advanced">Advanced</option>
+            </select>
+          </div>
+        )}
 
-        <textarea
-          placeholder="Webinar Description *"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          style={{ ...inputStyle, height: "100px" }}
-        />
+        {activeTab === "settings" && (
+          <div>
+            <input
+              type="number"
+              placeholder="Max Capacity"
+              value={maxCapacity}
+              onChange={(e) => setMaxCapacity(e.target.value)}
+              style={inputStyle}
+            />
+
+            <input
+              type="url"
+              placeholder="Image URL"
+              value={imageUrl}
+              onChange={(e) => setImageUrl(e.target.value)}
+              style={inputStyle}
+            />
+          </div>
+        )}
 
         <div style={{ marginTop: "20px" }}>
           <button onClick={handleSave} style={primaryBtn}>
@@ -214,6 +322,14 @@ export default function CreateWebinar() {
           )}
         </div>
       </div>
+
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
     </div>
   );
 }
@@ -224,6 +340,17 @@ const inputStyle = {
   marginBottom: "15px",
   borderRadius: "6px",
   border: "1px solid #ccc",
+};
+
+const tabStyle = {
+  flex: 1,
+  padding: "10px",
+  border: "none",
+  backgroundColor: "transparent",
+  cursor: "pointer",
+  fontSize: "14px",
+  fontWeight: "500",
+  color: "#374151",
 };
 
 const primaryBtn = {

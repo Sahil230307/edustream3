@@ -98,6 +98,15 @@ export default function WebinarDetails({ user }) {
         const updated = [...storedRegistered, Number(webinar.id)];
         localStorage.setItem(`registered_${user.id}`, JSON.stringify(updated));
         setIsRegistered(true);
+        
+        // Update the webinar state to show increased registered count
+        setWebinar((prev) => ({
+          ...prev,
+          registeredCount: (prev.registeredCount || 0) + 1,
+        }));
+        
+        // Dispatch custom event to notify Dashboard of registration
+        window.dispatchEvent(new Event("registration-updated"));
       } else {
         setToast({
           message: res.data.message || "Registration failed",
@@ -106,7 +115,15 @@ export default function WebinarDetails({ user }) {
       }
     } catch (error) {
       console.error("Registration error:", error);
-      setToast({ message: "Failed to register", type: "error" });
+      let errorMessage = "Failed to register";
+      
+      if (error.response?.status === 409) {
+        errorMessage = "You are already registered for this webinar";
+      } else if (error.response?.status === 400) {
+        errorMessage = error.response.data?.message || "Invalid registration";
+      }
+      
+      setToast({ message: errorMessage, type: "error" });
     }
   };
 

@@ -30,6 +30,25 @@ export default function Home({ user }) {
     fetchWebinars();
   }, []);
 
+  // Listen for registration updates to refresh webinars
+  useEffect(() => {
+    const handleRegistrationUpdate = () => {
+      const fetchWebinars = async () => {
+        try {
+          const res = await getAllWebinars();
+          setWebinars(res.data || []);
+        } catch (error) {
+          console.error("Error fetching webinars:", error);
+        }
+      };
+
+      fetchWebinars();
+    };
+
+    window.addEventListener("registration-updated", handleRegistrationUpdate);
+    return () => window.removeEventListener("registration-updated", handleRegistrationUpdate);
+  }, []);
+
   useEffect(() => {
     if (user?.id) {
       const stored =

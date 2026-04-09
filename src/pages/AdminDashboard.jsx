@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { getAllWebinars, deleteWebinar } from "../services/api";
+import Toast from "../components/Toast";
 import "./AdminDashboard.css";
 
 const ASSIGNMENTS_KEY = "edustream_assignments";
@@ -16,6 +17,7 @@ export default function AdminDashboard() {
   const [due, setDue] = useState("");
   const [submissionsCount, setSubmissionsCount] = useState(0);
   const [activeTab, setActiveTab] = useState("analytics");
+  const [toast, setToast] = useState(null);
 
   const loadData = async () => {
     try {
@@ -50,8 +52,20 @@ export default function AdminDashboard() {
     loadData();
   }, []);
 
+  // Listen for registration updates
+  useEffect(() => {
+    const handleRegistrationUpdate = () => {
+      loadData();
+    };
+
+    window.addEventListener("registration-updated", handleRegistrationUpdate);
+    return () => window.removeEventListener("registration-updated", handleRegistrationUpdate);
+  }, []);
+
   useEffect(() => {
     localStorage.setItem(ASSIGNMENTS_KEY, JSON.stringify(assignments));
+    // Dispatch event to notify Dashboard of assignment updates
+    window.dispatchEvent(new Event("assignment-updated"));
   }, [assignments]);
 
   const handleDelete = async (id) => {
@@ -61,10 +75,18 @@ export default function AdminDashboard() {
     try {
       await deleteWebinar(id);
       setWebinars((prev) => prev.filter((webinar) => webinar.id !== id));
-      alert("Webinar deleted successfully");
+      setToast({ message: "Webinar deleted successfully", type: "success" });
     } catch (error) {
       console.error("Delete failed:", error);
-      alert("Failed to delete webinar");
+      let errorMessage = "Failed to delete webinar";
+      
+      if (error.response?.status === 403) {
+        errorMessage = "You don't have permission to delete this webinar";
+      } else if (error.response?.status === 404) {
+        errorMessage = "Webinar not found";
+      }
+      
+      setToast({ message: errorMessage, type: "error" });
     }
   };
 
@@ -104,6 +126,14 @@ export default function AdminDashboard() {
 
   return (
     <div className="admin-dashboard">
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
+      
       <div className="admin-header">
         <h1>Admin Dashboard</h1>
         <p>Manage webinars, content, and track analytics</p>

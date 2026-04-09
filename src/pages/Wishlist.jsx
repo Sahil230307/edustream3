@@ -28,6 +28,16 @@ export default function Wishlist({ user }) {
     loadWishlistData();
   }, [user?.id]);
 
+  // Listen for registration updates to refresh capacity display
+  useEffect(() => {
+    const handleRegistrationUpdate = () => {
+      loadWishlistData();
+    };
+
+    window.addEventListener("registration-updated", handleRegistrationUpdate);
+    return () => window.removeEventListener("registration-updated", handleRegistrationUpdate);
+  }, [user?.id]);
+
   const wishlistWebinars = webinars.filter((w) => wishlist.includes(Number(w.id)));
 
   const handleRemoveFromWishlist = (webinarId) => {

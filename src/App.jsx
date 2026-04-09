@@ -27,11 +27,17 @@ function App() {
   // Load user from localStorage on refresh
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem("user"));
-    if (storedUser && storedUser.isLoggedIn) {
+    const authToken = localStorage.getItem("authToken");
+    
+    // Only restore user if both user data and auth token exist
+    if (storedUser && storedUser.isLoggedIn && authToken) {
       setUser({
         ...storedUser,
         role: storedUser.role?.toUpperCase(),
       });
+    } else if (storedUser && !authToken) {
+      // Token missing but user exists - clear invalid session
+      localStorage.removeItem("user");
     }
   }, []);
 

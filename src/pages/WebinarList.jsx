@@ -21,12 +21,30 @@ export default function WebinarList({ user }) {
       setWebinars(res.data);
     } catch (error) {
       console.error("Failed to load webinars:", error);
-      setToast({ message: "Failed to load webinars", type: "error" });
+      let errorMessage = "Failed to load webinars";
+      
+      if (error.response?.status === 401) {
+        errorMessage = "Please login to view webinars";
+      } else if (error.message === "Network Error") {
+        errorMessage = "Cannot connect to server";
+      }
+      
+      setToast({ message: errorMessage, type: "error" });
     }
   };
 
   useEffect(() => {
     loadWebinars();
+  }, []);
+
+  // Listen for registration updates to refresh webinars
+  useEffect(() => {
+    const handleRegistrationUpdate = () => {
+      loadWebinars();
+    };
+
+    window.addEventListener("registration-updated", handleRegistrationUpdate);
+    return () => window.removeEventListener("registration-updated", handleRegistrationUpdate);
   }, []);
 
   // Load wishlist when user changes

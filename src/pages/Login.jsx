@@ -53,8 +53,15 @@ export default function Login({ setUser }) {
           return;
         }
 
+        // Store JWT token for authentication
+        if (res.data.token) {
+          localStorage.setItem("authToken", res.data.token);
+        }
+
         const session = {
-          ...res.data,
+          id: res.data.id,
+          name: res.data.name,
+          email: res.data.email,
           role: backendRole,
           isLoggedIn: true,
         };
@@ -79,10 +86,17 @@ export default function Login({ setUser }) {
       }
     } catch (error) {
       console.error("Login Error:", error);
-      setToast({
-        message: "Server error. Please try again.",
-        type: "error",
-      });
+      let errorMessage = "Server error. Please try again.";
+      
+      if (error.response?.status === 401) {
+        errorMessage = "Invalid email or password";
+      } else if (error.response?.status === 400) {
+        errorMessage = error.response.data?.message || "Invalid input";
+      } else if (error.message === "Network Error") {
+        errorMessage = "Cannot connect to server";
+      }
+      
+      setToast({ message: errorMessage, type: "error" });
     }
   };
 
