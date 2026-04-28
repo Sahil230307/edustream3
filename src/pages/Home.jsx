@@ -139,6 +139,9 @@ export default function Home({ user }) {
                   <Link to="/admin/create">
                     <button className="secondary-btn">Create Webinar</button>
                   </Link>
+                  <Link to="/admin/workshop/create">
+                    <button className="secondary-btn">Create Workshop</button>
+                  </Link>
                 </div>
               </>
             )}

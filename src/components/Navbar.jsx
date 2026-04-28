@@ -85,7 +85,7 @@ export default function Navbar({ user, setUser, darkMode, setDarkMode }) {
                 </NavLink>
               </>
             )}
-
+<NavLink to="/workshops">Workshops</NavLink>
             {/* ADMIN NAVBAR */}
             {userRole === "ADMIN" && (
               <>
@@ -105,6 +105,15 @@ export default function Navbar({ user, setUser, darkMode, setDarkMode }) {
                   }
                 >
                   + Create Webinar
+                </NavLink>
+
+                <NavLink
+                  to="/admin/workshop/create"
+                  className={({ isActive }) =>
+                    "nav-link" + (isActive ? " active" : "")
+                  }
+                >
+                  + Create Workshop
                 </NavLink>
 
                 <NavLink

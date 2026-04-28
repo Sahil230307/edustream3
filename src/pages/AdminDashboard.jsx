@@ -137,6 +137,14 @@ export default function AdminDashboard() {
       <div className="admin-header">
         <h1>Admin Dashboard</h1>
         <p>Manage webinars, content, and track analytics</p>
+        <div className="header-actions">
+          <Link to="/admin/create">
+            <button className="btn-primary create-btn">+ Create Webinar</button>
+          </Link>
+          <Link to="/admin/workshop/create">
+            <button className="btn-primary create-btn">+ Create Workshop</button>
+          </Link>
+        </div>
       </div>
 
       <div className="admin-tabs">

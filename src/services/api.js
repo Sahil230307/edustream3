@@ -52,6 +52,15 @@ export const updateWebinar = (id, data) => api.put(`/webinars/${id}`, data);
 export const deleteWebinar = (id) => api.delete(`/webinars/${id}`);
 
 // =========================
+// WORKSHOP APIs
+// =========================
+export const getAllWorkshops = () => api.get("/workshops");
+export const getWorkshopById = (id) => api.get(`/workshops/${id}`);
+export const createWorkshop = (data) => api.post("/workshops", data);
+export const updateWorkshop = (id, data) => api.put(`/workshops/${id}`, data);
+export const deleteWorkshop = (id) => api.delete(`/workshops/${id}`);
+
+// =========================
 // USER APIs
 // =========================
 export const updateUserProfile = (id, userData) =>
@@ -71,6 +80,10 @@ export const getUserRegisteredWebinars = (userId) =>
 
 export const getRegistrationsByUser = (userId) =>
   api.get(`/registrations/user/${userId}`);
+
+export const registerForWorkshop = (userId, workshopId) =>
+  api.post(`/registrations/${userId}/${workshopId}`);
+
 
 // =========================
 // OPTIONAL: export instance

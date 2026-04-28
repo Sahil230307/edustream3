@@ -17,6 +17,9 @@ import PastWebinars from "./pages/PastWebinars";
 import Submission from "./pages/Submission";
 import UserProfile from "./pages/UserProfile";
 import Wishlist from "./pages/Wishlist";
+import WorkshopList from "./pages/WorkshopList";
+import WorkshopDetails from "./pages/WorkshopDetails";
+import CreateWorkshop from "./pages/CreateWorkshop";
 
 function App() {
   const [user, setUser] = useState(null);
@@ -117,7 +120,19 @@ function App() {
             </ProtectedRoute>
           }
         />
+<Route path="/workshops" element={<WorkshopList user={user} />} />
 
+<Route path="/workshop/:id" element={<WorkshopDetails user={user} />} />
+<Route path="/workshops/:id" element={<WorkshopDetails user={user} />} />
+
+<Route
+  path="/admin/workshop/create"
+  element={
+    <ProtectedRoute user={user} role="ADMIN">
+      <CreateWorkshop />
+    </ProtectedRoute>
+  }
+/>
         {/* ADMIN ROUTES */}
         <Route
           path="/admin"
