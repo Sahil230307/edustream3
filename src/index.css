@@ -97,7 +97,7 @@ body.dark-mode .filter-select:focus {
   border-color: #3498db;
 }a{color:inherit;text-decoration:none}
 
-button{cursor:pointer;border:none;background:transparent}
+button{cursor:pointer;border:none;font-family:inherit}
 
 /* Layout container used by App */
 #root{max-width:1200px;margin:24px auto;padding:16px}
@@ -166,7 +166,7 @@ input:focus, select:focus, textarea:focus{border-color:var(--accent);box-shadow:
 .auth-actions{display:flex;gap:10px;align-items:center;justify-content:space-between;margin-top:8px}
 .auth-button{padding:10px 14px;border-radius:8px;font-weight:700}
 .auth-primary{background:linear-gradient(90deg,var(--accent),var(--brand-secondary));color:#fff}
-.auth-toggle{background:transparent;border:none;color:var(--accent-600);font-weight:600}
+.auth-toggle{background:transparent;border:none;color:var(--accent-600);font-weight:600;padding:8px 12px;cursor:pointer;border-radius:6px;font-size:13px;transition:all 0.2s ease;white-space:nowrap}.auth-toggle:hover{background:rgba(79,108,209,0.1);color:var(--accent-700)}.auth-toggle:active{transform:scale(0.98)}
 
 /* Make headings and important labels a bit bolder across site */
 h1,h2,h3{font-weight:700}

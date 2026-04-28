@@ -14,10 +14,11 @@
 .mode-toggle button {
   padding: 8px 14px;
   border: none;
-  background: transparent;
+  background: #f3f4f6;
   cursor: pointer;
   font-weight: 600;
   color: #374151;
+  transition: all 0.2s ease;
 }
 
 .mode-toggle button.active {

@@ -2,16 +2,17 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import PasswordInput from "../components/PasswordInput";
 import Toast from "../components/Toast";
+import { registerUser } from "../services/api";
 
-export default function Signup({ setUser }) {
+export default function Signup() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("user");
+  const [role, setRole] = useState("USER");
   const [toast, setToast] = useState(null);
   const navigate = useNavigate();
 
-  const handleSignup = (e) => {
+  const handleSignup = async (e) => {
     e.preventDefault();
 
     if (!name.trim() || !email.trim() || !password.trim()) {
@@ -19,31 +20,54 @@ export default function Signup({ setUser }) {
       return;
     }
 
-    // Ensure users list exists in localStorage
-    const stored = JSON.parse(localStorage.getItem("users")) || [];
-
-    // Prevent duplicate emails
-    if (stored.find((u) => u.email === email)) {
-      setToast({ message: "An account with this email already exists. Please login.", type: "error" });
-      navigate("/login");
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setToast({ message: "Please enter a valid email", type: "error" });
       return;
     }
 
-    const newUser = {
-      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      name,
-      email,
-      role,
-      // Note: storing plaintext passwords is only for demo purposes
-      password,
-    };
+    // Password length validation
+    if (password.length < 6) {
+      setToast({ message: "Password must be at least 6 characters", type: "error" });
+      return;
+    }
 
-    stored.push(newUser);
-    localStorage.setItem("users", JSON.stringify(stored));
+    try {
+      const res = await registerUser({
+        name,
+        email,
+        password,
+        role,
+      });
 
-    // Redirect to login so user can authenticate
-    setToast({ message: "Account created — please login.", type: "success" });
-    setTimeout(() => navigate("/login"), 900);
+      if (res.data.message === "User registered successfully") {
+        setToast({
+          message: `Account created successfully as ${role}. Please login.`,
+          type: "success",
+        });
+
+        setTimeout(() => navigate("/login"), 1000);
+      } else {
+        setToast({
+          message: res.data.message || "Signup failed",
+          type: "error",
+        });
+      }
+    } catch (error) {
+      console.error("Signup Error:", error);
+      let errorMessage = "Server error. Please try again.";
+      
+      if (error.response?.status === 400) {
+        errorMessage = error.response.data?.message || "Invalid input provided";
+      } else if (error.response?.status === 409) {
+        errorMessage = "Email already registered";
+      } else if (error.message === "Network Error") {
+        errorMessage = "Cannot connect to server";
+      }
+      
+      setToast({ message: errorMessage, type: "error" });
+    }
   };
 
   return (
@@ -85,8 +109,8 @@ export default function Signup({ setUser }) {
             value={role}
             onChange={(e) => setRole(e.target.value)}
           >
-            <option value="user">User</option>
-            <option value="admin">Admin</option>
+            <option value="USER">User</option>
+            <option value="ADMIN">Admin</option>
           </select>
 
           <div className="auth-actions">
@@ -96,8 +120,15 @@ export default function Signup({ setUser }) {
             <div className="muted">Already have an account? Login</div>
           </div>
         </form>
+
         <div className="toast-container">
-          <Toast message={toast?.message} type={toast?.type} onClose={() => setToast(null)} />
+          {toast && (
+            <Toast
+              message={toast.message}
+              type={toast.type}
+              onClose={() => setToast(null)}
+            />
+          )}
         </div>
       </div>
     </div>

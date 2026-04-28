@@ -2,13 +2,13 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Toast from "../components/Toast";
 import {
-  createWebinar,
-  getWebinarById,
-  updateWebinar,
-  deleteWebinar,
+  createWorkshop,
+  getWorkshopById,
+  updateWorkshop,
+  deleteWorkshop,
 } from "../services/api";
 
-export default function CreateWebinar() {
+export default function CreateWorkshop() {
   const navigate = useNavigate();
   const { id } = useParams(); // for edit route
 
@@ -34,9 +34,9 @@ export default function CreateWebinar() {
   const dateRef = useRef(null);
   const descriptionRef = useRef(null);
 
-  const fetchWebinar = async () => {
+  const fetchWorkshop = async () => {
     try {
-      const res = await getWebinarById(editId);
+      const res = await getWorkshopById(editId);
       const existing = res.data;
 
       if (existing) {
@@ -52,13 +52,13 @@ export default function CreateWebinar() {
         setImageUrl(existing.imageUrl || "");
       }
     } catch (error) {
-      console.error("Error fetching webinar:", error);
-      let errorMessage = "Failed to load webinar details";
+      console.error("Error fetching workshop:", error);
+      let errorMessage = "Failed to load workshop details";
       
       if (error.response?.status === 404) {
-        errorMessage = "Webinar not found";
+        errorMessage = "Workshop not found";
       } else if (error.response?.status === 403) {
-        errorMessage = "You don't have permission to edit this webinar";
+        errorMessage = "You don't have permission to edit this workshop";
       }
       
       setToast({ message: errorMessage, type: "error" });
@@ -67,13 +67,13 @@ export default function CreateWebinar() {
 
   useEffect(() => {
     if (editId) {
-      fetchWebinar();
+      fetchWorkshop();
     }
   }, [editId]);
 
   const handleSave = async () => {
     if (!title.trim()) {
-      setToast({ message: "Please enter webinar title", type: "error" });
+      setToast({ message: "Please enter workshop title", type: "error" });
       setActiveTab("basic");
       titleRef.current?.focus();
       return;
@@ -117,20 +117,20 @@ export default function CreateWebinar() {
 
     try {
       if (editId) {
-        await updateWebinar(editId, webinarData);
-        setToast({ message: "Webinar updated successfully", type: "success" });
+        await updateWorkshop(editId, webinarData);
+        setToast({ message: "Workshop updated successfully", type: "success" });
       } else {
-        await createWebinar(webinarData);
-        setToast({ message: "Webinar created successfully", type: "success" });
+        await createWorkshop(webinarData);
+        setToast({ message: "Workshop created successfully", type: "success" });
       }
 
       setTimeout(() => navigate("/admin"), 800);
     } catch (error) {
-      console.error("Error saving webinar:", error);
-      let errorMessage = "Failed to save webinar";
+      console.error("Error saving workshop:", error);
+      let errorMessage = "Failed to save workshop";
       
       if (error.response?.status === 400) {
-        errorMessage = error.response.data?.message || "Invalid webinar data";
+        errorMessage = error.response.data?.message || "Invalid workshop data";
       } else if (error.response?.status === 403) {
         errorMessage = "You don't have permission to perform this action";
       }
@@ -140,21 +140,21 @@ export default function CreateWebinar() {
   };
 
   const handleDelete = async () => {
-    const confirmDelete = window.confirm("Delete this webinar?");
+    const confirmDelete = window.confirm("Delete this workshop?");
     if (!confirmDelete) return;
 
     try {
-      await deleteWebinar(editId);
-      setToast({ message: "Webinar deleted successfully", type: "success" });
+      await deleteWorkshop(editId);
+      setToast({ message: "Workshop deleted successfully", type: "success" });
       setTimeout(() => navigate("/admin"), 800);
     } catch (error) {
-      console.error("Error deleting webinar:", error);
-      let errorMessage = "Failed to delete webinar";
+      console.error("Error deleting workshop:", error);
+      let errorMessage = "Failed to delete workshop";
       
       if (error.response?.status === 403) {
-        errorMessage = "You don't have permission to delete this webinar";
+        errorMessage = "You don't have permission to delete this workshop";
       } else if (error.response?.status === 404) {
-        errorMessage = "Webinar not found";
+        errorMessage = "Workshop not found";
       }
       
       setToast({ message: errorMessage, type: "error" });
@@ -164,7 +164,7 @@ export default function CreateWebinar() {
   return (
     <div style={{ padding: "60px", maxWidth: "600px", margin: "auto" }}>
       <h2 style={{ marginBottom: "25px" }}>
-        {editId ? "Edit Webinar" : "Create Webinar"}
+        {editId ? "Edit Workshop" : "Create Workshop"}
       </h2>
 
       <div
@@ -215,7 +215,7 @@ export default function CreateWebinar() {
             <input
               ref={titleRef}
               type="text"
-              placeholder="Webinar Title *"
+              placeholder="Workshop Title *"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               style={inputStyle}
@@ -260,7 +260,7 @@ export default function CreateWebinar() {
           <div>
             <textarea
               ref={descriptionRef}
-              placeholder="Webinar Description *"
+              placeholder="Workshop Description *"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               style={{ ...inputStyle, height: "100px" }}
@@ -312,7 +312,7 @@ export default function CreateWebinar() {
 
         <div style={{ marginTop: "20px" }}>
           <button onClick={handleSave} style={primaryBtn}>
-            {editId ? "Update Webinar" : "Create Webinar"}
+            {editId ? "Update Workshop" : "Create Workshop"}
           </button>
 
           {editId && (

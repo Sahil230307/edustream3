@@ -1,13 +1,13 @@
 import { useState, useMemo, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Toast from "../components/Toast";
-import { getAllWebinars } from "../services/api";
-import "./WebinarList.css";
+import { getAllWorkshops } from "../services/api";
+import "./WorkshopList.css";
 
 const ITEMS_PER_PAGE = 6;
 
-export default function WebinarList({ user }) {
-  const [webinars, setWebinars] = useState([]);
+export default function WorkshopList({ user }) {
+  const [workshops, setWorkshops] = useState([]);
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedDifficulty, setSelectedDifficulty] = useState("All");
@@ -15,16 +15,16 @@ export default function WebinarList({ user }) {
   const [toast, setToast] = useState(null);
   const [wishlist, setWishlist] = useState([]);
 
-  const loadWebinars = async () => {
+  const loadWorkshops = async () => {
     try {
-      const res = await getAllWebinars();
-      setWebinars(res.data);
+      const res = await getAllWorkshops();
+      setWorkshops(res.data);
     } catch (error) {
-      console.error("Failed to load webinars:", error);
-      let errorMessage = "Failed to load webinars";
+      console.error("Failed to load workshops:", error);
+      let errorMessage = "Failed to load workshops";
       
       if (error.response?.status === 401) {
-        errorMessage = "Please login to view webinars";
+        errorMessage = "Please login to view workshops";
       } else if (error.message === "Network Error") {
         errorMessage = "Cannot connect to server";
       }
@@ -34,13 +34,13 @@ export default function WebinarList({ user }) {
   };
 
   useEffect(() => {
-    loadWebinars();
+    loadWorkshops();
   }, []);
 
-  // Listen for registration updates to refresh webinars
+  // Listen for registration updates to refresh workshops
   useEffect(() => {
     const handleRegistrationUpdate = () => {
-      loadWebinars();
+      loadWorkshops();
     };
 
     window.addEventListener("registration-updated", handleRegistrationUpdate);
@@ -58,12 +58,12 @@ export default function WebinarList({ user }) {
   }, [user?.id]);
 
   // Get unique categories and difficulties
-  const categories = ["All", ...new Set(webinars.map((w) => w.category || "Other"))];
-  const difficulties = ["All", ...new Set(webinars.map((w) => w.difficulty || "Beginner"))];
+  const categories = ["All", ...new Set(workshops.map((w) => w.category || "Other"))];
+  const difficulties = ["All", ...new Set(workshops.map((w) => w.difficulty || "Beginner"))];
 
-  // Filter webinars
+  // Filter workshops
   const filtered = useMemo(() => {
-    return webinars.filter((w) => {
+    return workshops.filter((w) => {
       const matchSearch =
         w.title?.toLowerCase().includes(search.toLowerCase()) ||
         w.speaker?.toLowerCase().includes(search.toLowerCase());
@@ -77,27 +77,27 @@ export default function WebinarList({ user }) {
 
       return matchSearch && matchCategory && matchDifficulty;
     });
-  }, [webinars, search, selectedCategory, selectedDifficulty]);
+  }, [workshops, search, selectedCategory, selectedDifficulty]);
 
   // Pagination
   const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
   const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
-  const paginatedWebinars = filtered.slice(startIdx, startIdx + ITEMS_PER_PAGE);
+  const paginatedWorkshops = filtered.slice(startIdx, startIdx + ITEMS_PER_PAGE);
 
-  const handleAddToWishlist = (webinarId) => {
+  const handleAddToWishlist = (workshopId) => {
     if (!user?.id) {
       setToast({ message: "Please login to add to wishlist", type: "error" });
       return;
     }
 
-    const updated = wishlist.includes(webinarId)
-      ? wishlist.filter((id) => id !== webinarId)
-      : [...wishlist, webinarId];
+    const updated = wishlist.includes(workshopId)
+      ? wishlist.filter((id) => id !== workshopId)
+      : [...wishlist, workshopId];
 
     setWishlist(updated);
     localStorage.setItem(`wishlist_${user.id}`, JSON.stringify(updated));
 
-    const isAdded = !wishlist.includes(webinarId);
+    const isAdded = !wishlist.includes(workshopId);
     setToast({
       message: isAdded ? "Added to wishlist! 🎉" : "Removed from wishlist",
       type: "info",
@@ -112,7 +112,7 @@ export default function WebinarList({ user }) {
   };
 
   return (
-    <div className="webinar-list-container">
+    <div className="workshop-list-container">
       {toast && (
         <Toast
           message={toast.message}
@@ -121,16 +121,16 @@ export default function WebinarList({ user }) {
         />
       )}
 
-      <div className="webinar-list-header">
-        <h1>Available Webinars</h1>
-        <p>Explore our collection of expert-led webinars</p>
+      <div className="workshop-list-header">
+        <h1>Available Workshops</h1>
+        <p>Explore our collection of expert-led workshops</p>
       </div>
 
       <div className="filters-section">
         <div className="search-bar">
           <input
             type="text"
-            placeholder="Search by webinar name or speaker..."
+            placeholder="Search by workshop name or speaker..."
             value={search}
             onChange={(e) => {
               setSearch(e.target.value);
@@ -185,14 +185,14 @@ export default function WebinarList({ user }) {
         </div>
 
         <div className="filter-info">
-          <p>{filtered.length} webinar{filtered.length !== 1 ? "s" : ""} found</p>
+          <p>{filtered.length} workshop{filtered.length !== 1 ? "s" : ""} found</p>
         </div>
       </div>
 
       {filtered.length === 0 ? (
         <div className="empty-state">
           <div className="empty-icon">🔍</div>
-          <h2>No webinars found</h2>
+          <h2>No workshops found</h2>
           <p>Try adjusting your search or filters</p>
           <button className="btn-primary" onClick={resetFilters}>
             Clear Filters
@@ -200,64 +200,64 @@ export default function WebinarList({ user }) {
         </div>
       ) : (
         <>
-          <div className="webinar-grid">
-            {paginatedWebinars.map((webinar) => (
-              <div key={webinar.id} className="webinar-card">
+          <div className="workshop-grid">
+            {paginatedWorkshops.map((workshop) => (
+              <div key={workshop.id} className="workshop-card">
                 <div className="card-image">
                   <img
                     src={
-                      webinar.imageUrl ||
-                      "https://via.placeholder.com/400x200?text=Webinar"
+                      workshop.imageUrl ||
+                      "https://via.placeholder.com/400x200?text=Workshop"
                     }
-                    alt={webinar.title}
+                    alt={workshop.title}
                   />
 
                   <div className="card-badges">
                     <span className="category-badge">
-                      {webinar.category || "Other"}
+                      {workshop.category || "Other"}
                     </span>
                     <span className="difficulty-badge">
-                      {webinar.difficulty || "Beginner"}
+                      {workshop.difficulty || "Beginner"}
                     </span>
                   </div>
 
                   <button
                     className={`wishlist-btn ${
-                      wishlist.includes(webinar.id) ? "active" : ""
+                      wishlist.includes(workshop.id ?? workshop._id) ? "active" : ""
                     }`}
-                    onClick={() => handleAddToWishlist(webinar.id)}
+                    onClick={() => handleAddToWishlist(workshop.id ?? workshop._id)}
                     title={
-                      wishlist.includes(webinar.id)
+                      wishlist.includes(workshop.id ?? workshop._id)
                         ? "Remove from wishlist"
                         : "Add to wishlist"
                     }
                   >
-                    {wishlist.includes(webinar.id) ? "❤️" : "🤍"}
+                    {wishlist.includes(workshop.id ?? workshop._id) ? "❤️" : "🤍"}
                   </button>
                 </div>
 
                 <div className="card-content">
-                  <h3 className="card-title">{webinar.title}</h3>
-                  <p className="card-speaker">By {webinar.speaker}</p>
+                  <h3 className="card-title">{workshop.title}</h3>
+                  <p className="card-speaker">By {workshop.speaker}</p>
 
                   <div className="card-meta">
-                    <span className="meta-item">📅 {webinar.date}</span>
-                    <span className="meta-item">⏰ {webinar.time}</span>
+                    <span className="meta-item">📅 {workshop.date}</span>
+                    <span className="meta-item">⏰ {workshop.time}</span>
                   </div>
 
-                  <p className="card-description">{webinar.description}</p>
+                  <p className="card-description">{workshop.description}</p>
 
                   <div className="card-capacity">
                     <span className="capacity-text">
-                      {webinar.registeredCount || 0}/{webinar.maxCapacity || 0} Registered
+                      {workshop.registeredCount || 0}/{workshop.maxCapacity || 0} Registered
                     </span>
                     <div className="capacity-bar">
                       <div
                         className="capacity-fill"
                         style={{
                           width: `${
-                            ((webinar.registeredCount || 0) /
-                              (webinar.maxCapacity || 1)) *
+                            ((workshop.registeredCount || 0) /
+                              (workshop.maxCapacity || 1)) *
                             100
                           }%`,
                         }}
@@ -267,14 +267,17 @@ export default function WebinarList({ user }) {
 
                   <div className="card-rating">
                     <span className="stars">
-                      {"⭐".repeat(Math.round(webinar.ratings || 0))}
+                      {"⭐".repeat(Math.round(workshop.ratings || 0))}
                     </span>
                     <span className="rating-value">
-                      {webinar.ratings || 0}/5
+                      {workshop.ratings || 0}/5
                     </span>
                   </div>
 
-                  <Link to={`/webinar/${webinar.id}`} className="card-link">
+                  <Link
+                    to={`/workshops/${workshop.id ?? workshop._id}`}
+                    className="card-link"
+                  >
                     <button className="btn-view">View Details →</button>
                   </Link>
                 </div>

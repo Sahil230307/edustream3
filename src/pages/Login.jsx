@@ -2,54 +2,102 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import PasswordInput from "../components/PasswordInput";
 import Toast from "../components/Toast";
+import { loginUser } from "../services/api";
 
 export default function Login({ setUser }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("user");
+  const [role, setRole] = useState("USER");
   const [toast, setToast] = useState(null);
   const navigate = useNavigate();
 
-  // Auto-login if already stored
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem("user"));
     if (storedUser && storedUser.isLoggedIn) {
       setUser(storedUser);
-      if (storedUser.role === "admin") navigate("/admin");
-      else navigate("/dashboard");
+      if (storedUser.role?.toUpperCase() === "ADMIN") {
+        navigate("/admin");
+      } else {
+        navigate("/dashboard");
+      }
     }
   }, [navigate, setUser]);
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!email.trim()) {
       setToast({ message: "Please enter your email", type: "error" });
       return;
     }
+
     if (!password.trim()) {
       setToast({ message: "Please enter your password", type: "error" });
       return;
     }
-    // Look up user in the `users` list stored in localStorage
-    const users = JSON.parse(localStorage.getItem("users")) || [];
-    const found = users.find((u) => u.email === email);
 
-    if (!found) {
-      setToast({ message: "No account found for this email. Please signup.", type: "error" });
-      return;
+    try {
+      const res = await loginUser({
+        email,
+        password,
+        role,
+      });
+
+      if (res.data && res.data.id) {
+        const backendRole = res.data.role?.toUpperCase();
+        const selectedRole = role.toUpperCase();
+
+        if (backendRole !== selectedRole) {
+          setToast({
+            message: `This account is registered as ${backendRole}, not ${selectedRole}`,
+            type: "error",
+          });
+          return;
+        }
+
+        // Store JWT token for authentication
+        if (res.data.token) {
+          localStorage.setItem("authToken", res.data.token);
+        }
+
+        const session = {
+          id: res.data.id,
+          name: res.data.name,
+          email: res.data.email,
+          role: backendRole,
+          isLoggedIn: true,
+        };
+
+        localStorage.setItem("user", JSON.stringify(session));
+        setUser(session);
+
+        setToast({ message: "Login successful!", type: "success" });
+
+        setTimeout(() => {
+          if (session.role === "ADMIN") {
+            navigate("/admin");
+          } else {
+            navigate("/dashboard");
+          }
+        }, 800);
+      } else {
+        setToast({
+          message: res.data.message || "Invalid email or password",
+          type: "error",
+        });
+      }
+    } catch (error) {
+      console.error("Login Error:", error);
+      let errorMessage = "Server error. Please try again.";
+      
+      if (error.response?.status === 401) {
+        errorMessage = "Invalid email or password";
+      } else if (error.response?.status === 400) {
+        errorMessage = error.response.data?.message || "Invalid input";
+      } else if (error.message === "Network Error") {
+        errorMessage = "Cannot connect to server";
+      }
+      
+      setToast({ message: errorMessage, type: "error" });
     }
-
-    if (found.password !== password) {
-      setToast({ message: "Incorrect password. Please try again.", type: "error" });
-      return;
-    }
-
-    // Successful login: create active session under `user`
-    const session = { ...found, isLoggedIn: true };
-    localStorage.setItem("user", JSON.stringify(session));
-    setUser(session);
-
-    if (session.role === "admin") navigate("/admin");
-    else navigate("/dashboard");
   };
 
   return (
@@ -81,8 +129,8 @@ export default function Login({ setUser }) {
             value={role}
             onChange={(e) => setRole(e.target.value)}
           >
-            <option value="user">User</option>
-            <option value="admin">Admin</option>
+            <option value="USER">User</option>
+            <option value="ADMIN">Admin</option>
           </select>
 
           <div className="auth-actions">
@@ -93,12 +141,15 @@ export default function Login({ setUser }) {
           </div>
         </div>
       </div>
+
       <div className="toast-container">
-        <Toast
-          message={toast?.message}
-          type={toast?.type}
-          onClose={() => setToast(null)}
-        />
+        {toast && (
+          <Toast
+            message={toast.message}
+            type={toast.type}
+            onClose={() => setToast(null)}
+          />
+        )}
       </div>
     </div>
   );

@@ -2,13 +2,13 @@ import { useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import RatingsReview from "../components/RatingsReview";
 import Toast from "../components/Toast";
-import { getWebinarById, registerForWebinar } from "../services/api";
-import "./WebinarDetails.css";
+import { getWorkshopById, registerForWorkshop } from "../services/api";
+import "./WorkshopDetails.css";
 
-export default function WebinarDetails({ user }) {
+export default function WorkshopDetails({ user }) {
   const { id } = useParams();
 
-  const [webinar, setWebinar] = useState(null);
+  const [workshop, setWorkshop] = useState(null);
   const [toast, setToast] = useState(null);
   const [wishlist, setWishlist] = useState([]);
   const [isRegistered, setIsRegistered] = useState(false);
@@ -16,19 +16,23 @@ export default function WebinarDetails({ user }) {
   const fallbackImage =
     "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&h=400&fit=crop";
 
-  const fetchWebinarDetails = async () => {
+  const fetchWorkshopDetails = async () => {
     try {
-      const res = await getWebinarById(id);
-      setWebinar(res.data);
+      const res = await getWorkshopById(id);
+      const workshopData = res.data;
+      setWorkshop({
+        ...workshopData,
+        id: workshopData.id ?? workshopData._id,
+      });
     } catch (error) {
-      console.error("Error fetching webinar details:", error);
-      setToast({ message: "Failed to load webinar details", type: "error" });
+      console.error("Error fetching workshop details:", error);
+      setToast({ message: "Failed to load workshop details", type: "error" });
     }
   };
 
-  // Load webinar details
+  // Load workshop details
   useEffect(() => {
-    fetchWebinarDetails();
+    fetchWorkshopDetails();
   }, [id]);
 
   // Load wishlist when user changes
@@ -51,28 +55,28 @@ export default function WebinarDetails({ user }) {
     }
   }, [user?.id, id]);
 
-  if (!webinar) {
+  if (!workshop) {
     return (
-      <div className="webinar-details-container">
+      <div className="workshop-details-container">
         <div className="error-message">
-          <h2>Webinar not found</h2>
-          <p>The webinar you're looking for doesn't exist.</p>
+          <h2>Workshop not found</h2>
+          <p>The workshop you're looking for doesn't exist.</p>
         </div>
       </div>
     );
   }
 
-  const isWishlisted = wishlist.includes(Number(webinar.id));
+  const isWishlisted = wishlist.includes(Number(workshop.id));
 
   // Safe fallback values
-  const category = webinar.category || "General";
-  const difficulty = webinar.difficulty || "Beginner";
-  const speakerEmail = webinar.speakerEmail || "Not provided";
-  const maxCapacity = webinar.maxCapacity || 100;
-  const registeredCount = webinar.registeredCount || 0;
-  const ratings = webinar.ratings || 0;
-  const reviews = webinar.reviews || [];
-  const resources = webinar.resources || [];
+  const category = workshop.category || "General";
+  const difficulty = workshop.difficulty || "Beginner";
+  const speakerEmail = workshop.speakerEmail || "Not provided";
+  const maxCapacity = workshop.maxCapacity || 100;
+  const registeredCount = workshop.registeredCount || 0;
+  const ratings = workshop.ratings || 0;
+  const reviews = workshop.reviews || [];
+  const resources = workshop.resources || [];
 
   const capacityPercentage = (registeredCount / maxCapacity) * 100;
 
@@ -88,19 +92,19 @@ export default function WebinarDetails({ user }) {
     }
 
     try {
-      const res = await registerForWebinar(user.id, webinar.id);
+      const res = await registerForWorkshop(user.id, workshop.id);
 
       if (res.data.message === "Registration successful") {
         setToast({ message: "Successfully registered! 🎉", type: "success" });
 
         const storedRegistered =
           JSON.parse(localStorage.getItem(`registered_${user.id}`)) || [];
-        const updated = [...storedRegistered, Number(webinar.id)];
+        const updated = [...storedRegistered, Number(workshop.id)];
         localStorage.setItem(`registered_${user.id}`, JSON.stringify(updated));
         setIsRegistered(true);
         
-        // Update the webinar state to show increased registered count
-        setWebinar((prev) => ({
+        // Update the workshop state to show increased registered count
+        setWorkshop((prev) => ({
           ...prev,
           registeredCount: (prev.registeredCount || 0) + 1,
         }));
@@ -118,7 +122,7 @@ export default function WebinarDetails({ user }) {
       let errorMessage = "Failed to register";
       
       if (error.response?.status === 409) {
-        errorMessage = "You are already registered for this webinar";
+        errorMessage = "You are already registered for this workshop";
       } else if (error.response?.status === 400) {
         errorMessage = error.response.data?.message || "Invalid registration";
       }
@@ -134,8 +138,8 @@ export default function WebinarDetails({ user }) {
     }
 
     const updated = isWishlisted
-      ? wishlist.filter((wid) => wid !== webinar.id)
-      : [...wishlist, webinar.id];
+      ? wishlist.filter((wid) => wid !== workshop.id)
+      : [...wishlist, workshop.id];
 
     setWishlist(updated);
     localStorage.setItem(`wishlist_${user.id}`, JSON.stringify(updated));
@@ -147,7 +151,7 @@ export default function WebinarDetails({ user }) {
   };
 
   return (
-    <div className="webinar-details-container">
+    <div className="workshop-details-container">
       {toast && (
         <Toast
           message={toast.message}
@@ -159,8 +163,8 @@ export default function WebinarDetails({ user }) {
       <div className="details-header">
         <div className="header-image">
           <img
-            src={webinar.imageUrl?.trim() ? webinar.imageUrl : fallbackImage}
-            alt={webinar.title || "Webinar"}
+            src={workshop.imageUrl?.trim() ? workshop.imageUrl : fallbackImage}
+            alt={workshop.title || "Workshop"}
             onError={(e) => {
               e.target.onerror = null;
               e.target.src = fallbackImage;
@@ -174,10 +178,10 @@ export default function WebinarDetails({ user }) {
         </div>
 
         <div className="header-content">
-          <h1>{webinar.title}</h1>
+          <h1>{workshop.title}</h1>
 
           <div className="speaker-info">
-            <span className="speaker-name">By {webinar.speaker}</span>
+            <span className="speaker-name">By {workshop.speaker}</span>
             <span className="speaker-email">📧 {speakerEmail}</span>
           </div>
 
@@ -190,14 +194,14 @@ export default function WebinarDetails({ user }) {
             </span>
           </div>
 
-          <div className="webinar-meta">
+          <div className="workshop-meta">
             <div className="meta-item">
               <span className="meta-label">📅 Date</span>
-              <span className="meta-value">{webinar.date}</span>
+              <span className="meta-value">{workshop.date}</span>
             </div>
             <div className="meta-item">
               <span className="meta-label">⏰ Time</span>
-              <span className="meta-value">{webinar.time || "Not specified"}</span>
+              <span className="meta-value">{workshop.time || "Not specified"}</span>
             </div>
             <div className="meta-item">
               <span className="meta-label">👥 Capacity</span>
@@ -234,8 +238,8 @@ export default function WebinarDetails({ user }) {
           {user && (
             <div className="registration-note">
               {isRegistered
-                ? "✓ You are registered for this webinar"
-                : "Register to join this webinar"}
+                ? "✓ You are registered for this workshop"
+                : "Register to join this workshop"}
             </div>
           )}
         </div>
@@ -244,8 +248,8 @@ export default function WebinarDetails({ user }) {
       <div className="details-content">
         <div className="main-content">
           <section className="description-section">
-            <h2>About This Webinar</h2>
-            <p>{webinar.description}</p>
+            <h2>About This Workshop</h2>
+            <p>{workshop.description}</p>
           </section>
 
           {resources.length > 0 && (
@@ -269,12 +273,12 @@ export default function WebinarDetails({ user }) {
             </section>
           )}
 
-          {webinar.recordingUrl && (
+          {workshop.recordingUrl && (
             <section className="recording-section">
               <h2>Recording</h2>
-              <p>Access the webinar recording and materials</p>
+              <p>Access the workshop recording and materials</p>
               <a
-                href={webinar.recordingUrl}
+                href={workshop.recordingUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn btn-recording"
@@ -284,11 +288,11 @@ export default function WebinarDetails({ user }) {
             </section>
           )}
 
-          {user && webinar && (
+          {user && workshop && (
             <RatingsReview
-              webinar={webinar}
-              webinars={[webinar]}
-              setWebinars={() => {}}
+              workshop={workshop}
+              workshops={[workshop]}
+              setWorkshops={() => {}}
               user={user}
             />
           )}
@@ -296,7 +300,7 @@ export default function WebinarDetails({ user }) {
 
         <div className="sidebar">
           <div className="info-card">
-            <h3>Webinar Details</h3>
+            <h3>Workshop Details</h3>
             <div className="info-item">
               <span className="label">Category</span>
               <span className="value">{category}</span>
@@ -324,7 +328,7 @@ export default function WebinarDetails({ user }) {
 
           <div className="speaker-card">
             <h3>Speaker</h3>
-            <p className="speaker-name">{webinar.speaker}</p>
+            <p className="speaker-name">{workshop.speaker}</p>
             <p className="speaker-email">{speakerEmail}</p>
             <p>Expert instructor with extensive experience in {category}</p>
           </div>
